@@ -9,6 +9,7 @@ namespace personnel_tracking_api.Controllers
     [ApiController]
     public class BarcodeController : Controller
     {
+       // yunus
         private readonly IBarcodeService _barcodeService;
         public BarcodeController(IBarcodeService barcodeService)
         {
