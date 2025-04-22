@@ -7,7 +7,7 @@ import UpdateStoreComponent from './AddUser/updateUser';
 
 export default function Index() {
     const [value, setValue] = React.useState('ekle');
-
+    // ilknur 
     const styles = StyleSheet.create({
         container: {
             flex: 1,
