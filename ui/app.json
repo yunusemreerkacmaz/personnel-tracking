@@ -1,0 +1,64 @@
+{
+  "expo": {
+    "name": "MPDKS",
+    "slug": "personnel-tracking",
+    "version": "1.0.0",
+    "orientation": "default",
+    "icon": "./assets/adaptive-icon@2x.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "enableBridgeless": false,
+    "splash": {
+      "image": "./assets/favicon.png",
+      "resizeMode": "stretch",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": ".com.yeer.PersonnelTracking",
+      "requireFullScreen": true
+    },
+    "android": {
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyCtGUBJm-pjeCa6Eht0hOF9CiJ2AzA4GJc"
+        }
+      },
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon@2x.png",
+        "resizeMode":"cover",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "ye_er_personnel_tracking_android.com"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
+      ],
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true,
+          "faceIDPermission": "Allow $(PRODUCT_NAME) to access your Face ID biometric data."
+        }
+      ],
+      [
+        "expo-screen-orientation",
+        {
+          "initialOrientation": "DEFAULT"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "27d81932-5886-4bd9-b62a-94ab406b8cf4"
+      }
+    }
+  }
+}

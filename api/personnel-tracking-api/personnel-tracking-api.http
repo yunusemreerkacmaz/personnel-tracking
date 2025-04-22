@@ -1,0 +1,6 @@
+@personnel_tracking_api_HostAddress = http://localhost:5023
+
+GET {{personnel_tracking_api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
