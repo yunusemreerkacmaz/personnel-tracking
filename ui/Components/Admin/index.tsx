@@ -6,6 +6,7 @@ import DeleteUserComponent from './AddUser/deleteUser';
 import UpdateStoreComponent from './AddUser/updateUser';
 
 export default function Index() {
+    // yunus
     const [value, setValue] = React.useState('ekle');
 
     const styles = StyleSheet.create({
