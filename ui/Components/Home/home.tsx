@@ -25,14 +25,9 @@ export default function HomeComponent() {
     pagination: { ...initialDataGridDto.pagination, loginDto: loginState }
   })
 
-  // const notificationWebSocket = useSelector((state: RootState) => state.websocket)
+      const screenOrientation = useSelector((state: RootState) => state.screenOrientationSlice)
+  
 
-  const [orientation, setOrientation] = useState(getOrientation());
-
-  function getOrientation() {
-    const { width, height } = Dimensions.get('window');
-    return width > height ? 'landscape' : 'portrait';
-  }
 
   useFocusEffect(
     React.useCallback(() => {
@@ -59,12 +54,7 @@ export default function HomeComponent() {
   }, [loginState.userDto?.id])
 
 
-  useEffect(() => {
-    const subscription = Dimensions.addEventListener('change', () => {
-      setOrientation(getOrientation());
-    });
-    return () => subscription.remove();
-  }, []);
+  
 
   const styles = StyleSheet.create({
     dataTable: {
@@ -83,10 +73,6 @@ export default function HomeComponent() {
       }),
     },
   });
-
-
-  const from = datas.pagination.page * datas.pagination.pageSize;
-  const to = Math.min((datas.pagination.page + 1) * datas.pagination.pageSize, datas.pagination.total);
 
   const handlePagination = (value: number, pageOrPageSize: string) => {
     if (pageOrPageSize === "page") {
@@ -110,7 +96,7 @@ export default function HomeComponent() {
   }
 
   const handleInputOutIcon = (item: PersonnelDto, value: string) => {
-    if (orientation === "portrait") {                                     // Telefon dikey ise
+    if (screenOrientation.isPortrait) {                                     // Telefon dikey ise
       if (item.entrance && value === "giriş") {
         return <IconButton iconColor='green' icon={'door-open'} />
       }
@@ -132,6 +118,7 @@ export default function HomeComponent() {
         return <Text></Text>
       }
     }
+    
   }
 
 
@@ -140,15 +127,15 @@ export default function HomeComponent() {
       <ScrollView >
         {datas.inputs && <DataTable style={styles.dataTable} >
           <DataTable.Header style={{ backgroundColor: '#a9d6e5' }}>
-            <DataTable.Title style={{ flex: 1 }}><Text style={{color:'black'}}>Id</Text></DataTable.Title>
-            <DataTable.Title style={{ flex: 1 }} ><Text numberOfLines={1} ellipsizeMode='tail' style={{color:'black'}}>Giriş Durumu</Text></DataTable.Title>
-            <DataTable.Title style={{ flex: 1 }}><Text style={{color:'black'}}>Giriş Tarihi</Text></DataTable.Title>
-            <DataTable.Title style={{ flex: 1 }}><Text style={{color:'black'}}>Çıkış Durumu</Text></DataTable.Title>
-            <DataTable.Title style={{ flex: 1 }}><Text style={{color:'black'}}>Çıkış Tarihi</Text></DataTable.Title>
+            {/* <DataTable.Title style={{ flex: 1 }}><Text style={{color:'black'}}>Id</Text></DataTable.Title> */}
+            <DataTable.Title style={{ flex: 1 }} ><Text numberOfLines={1} ellipsizeMode='tail' style={{ color: 'black' }}>Giriş Durumu</Text></DataTable.Title>
+            <DataTable.Title style={{ flex: 1 }}><Text style={{ color: 'black' }}>Giriş Tarihi</Text></DataTable.Title>
+            <DataTable.Title style={{ flex: 1 }}><Text style={{ color: 'black' }}>Çıkış Durumu</Text></DataTable.Title>
+            <DataTable.Title style={{ flex: 1 }}><Text style={{ color: 'black' }}>Çıkış Tarihi</Text></DataTable.Title>
           </DataTable.Header>
           {datas?.inputs?.map((item, index) => (
             <DataTable.Row key={index}>
-              <DataTable.Cell style={{ flex: 1 }}><Text>{item.id}</Text></DataTable.Cell>
+              {/* <DataTable.Cell style={{ flex: 1 }}><Text>{item.id}</Text></DataTable.Cell> */}
               <DataTable.Cell style={{ flex: 1 }}>{handleInputOutIcon(item, 'giriş')}</DataTable.Cell>
               <DataTable.Cell style={{ flex: 1 }}><Text>{item.dateRangeDto.startDate ? moment(item.dateRangeDto.startDate).format('DD.MM.YYYY HH:mm') : ""}</Text></DataTable.Cell>
               <DataTable.Cell style={{ flex: 1 }}>{handleInputOutIcon(item, 'çıkış')}</DataTable.Cell>
@@ -156,17 +143,17 @@ export default function HomeComponent() {
             </DataTable.Row>
           ))}
           <DataTable.Pagination
-            page={datas.pagination.page}
-            numberOfPages={datas?.pagination?.page ?? 0}
-            onPageChange={(page) => handlePagination(page, 'page')}
-            label={`${from + 1}-${to} of ${datas.pagination.total}`}
-            numberOfItemsPerPageList={[1, 2, 3, 4, 10]}
-            numberOfItemsPerPage={datas.pagination.pageSize}
-            onItemsPerPageChange={(pageSize) => { handlePagination(pageSize, 'pageSize') }}
-            showFastPaginationControls
-            selectPageDropdownLabel={'Rows per page'}
+            page={datas.pagination.page}                                                    // sayfayı gösteriyor(0 dan başlıyor)
+            numberOfPages={Math.ceil(datas.pagination.total / datas.pagination.pageSize)}   // sayfa Numarası
+            onPageChange={(page) => handlePagination(page, 'page')}                         // sayfalama işlemi metodu
+            label={`${datas.pagination.from}-${datas.pagination.to} of ${datas.pagination.total}`}                        // 3 - 4 of 4 ( 3. veri dahil ile 4. veri dahil arasındaki verileri gösteriyor ) Toplam veri sayısı
+            numberOfItemsPerPageList={[1, 2, 4, 6, 8, 10, 15]}                              // sayfada kaç veri göstereceksin
+            numberOfItemsPerPage={datas.pagination.pageSize}                                // sayfada gösterilecek olan veri sayısı
+            onItemsPerPageChange={(pageSize) => { handlePagination(pageSize, 'pageSize') }} // sayfada kaç veri göstereceksin
+            showFastPaginationControls                                                      // En başa( |< ) ve en sona( >| ) götüren ifadeler
+            selectPageDropdownLabel={'Satır sayısı seç'}
             theme={theme}
-            
+
           />
         </DataTable>}
         <Button style={{ marginTop: 50 }} onPress={() => navigation.navigate('Profile')}>

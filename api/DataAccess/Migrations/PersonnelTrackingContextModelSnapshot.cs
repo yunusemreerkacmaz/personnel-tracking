@@ -30,6 +30,9 @@ namespace DataAccess.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("ApprovingAuthorityId")
+                        .HasColumnType("int");
+
                     b.Property<bool?>("AreaControl")
                         .HasColumnType("tinyint(1)");
 

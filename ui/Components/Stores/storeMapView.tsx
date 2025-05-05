@@ -1,8 +1,8 @@
-import React, { LegacyRef, useCallback, useEffect, useRef, useState } from 'react';
-import MapView, { Callout, CalloutSubview, Circle, MapCallout, MapMarker, Marker, MarkerAnimated, Polygon, PROVIDER_DEFAULT, PROVIDER_GOOGLE, Region, UrlTile } from 'react-native-maps';
-import { Modal, ScrollView, StyleSheet, View, Text, Dimensions, TouchableOpacity, Pressable } from 'react-native';
+import React, { useRef, useState } from 'react';
+import MapView, { Callout, Circle, Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
+import { Modal, StyleSheet, View, Text } from 'react-native';
 import { initialStoreLocationDto, StoreDto, StoreLocationDto } from './Dtos/storeDto';
-import { Badge, Button, IconButton, PaperProvider, Portal, Provider, Searchbar, Tooltip } from 'react-native-paper';
+import { Badge, Button, IconButton, Searchbar, Tooltip } from 'react-native-paper';
 import Toast, { BaseToast } from 'react-native-toast-message';
 import axios from 'axios';
 import { CrudEnum } from '../../Enums/ComponentEnum';
@@ -19,8 +19,6 @@ export interface IProps {
   setCrudStatus?: React.Dispatch<React.SetStateAction<"default" | "update" | "delete">>
   setFormHelperText?: React.Dispatch<React.SetStateAction<{
     storeName: boolean;
-    startDate: boolean;
-    endDate: boolean;
     latitude: boolean;
     longitude: boolean;
   }>>

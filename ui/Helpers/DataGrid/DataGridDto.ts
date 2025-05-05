@@ -5,12 +5,16 @@ export interface PaginationDto{
     pageSize:number
     loginDto:LoginDto
     total:number
+    from:number,
+    to:number
 }
 export const initialPaginationDto:PaginationDto={
     page: 0,
     pageSize: 4,
-    loginDto:initialLoginDto,
-    total:0
+    loginDto: initialLoginDto,
+    total: 0,
+    from: 0,
+    to: 0
 }
 export interface DataGridDto<T> {
     inputs: T[]

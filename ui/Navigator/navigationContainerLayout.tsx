@@ -48,7 +48,7 @@ export default function NavigationContainerLayout() {
     ),
     customToast: (customProps: ToastCustomType) => {
       const { props,text1,text2 } = customProps
-      return <View style={customStyle.container}>
+      return <View style={[customStyle.container]}>
         <Text style={customStyle.text1}>{text1}</Text>
         {text2 && <Text style={customStyle.text2}>{text2}</Text>}
         <View style={{ flexDirection: 'row', gap: 10, margin: 20 }}>
@@ -61,7 +61,6 @@ export default function NavigationContainerLayout() {
         </View>
       </View>
     },
-
   };
 
   const customStyle = StyleSheet.create({

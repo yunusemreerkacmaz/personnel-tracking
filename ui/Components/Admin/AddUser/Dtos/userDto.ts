@@ -22,7 +22,9 @@ export interface AddUserDto extends UserDto {
 
 export interface DeleteUsersDto extends AddUserDto { }
 
-export interface GetUserDto extends AddUserDto { }
+export interface GetUserDto extends AddUserDto {
+    isHaveBarcode:false
+ }
 
 export const initialUserDto: UserDto = {
     id: 0,

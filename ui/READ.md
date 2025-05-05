@@ -10,4 +10,11 @@
 
 # LocationStore
 - LocationStore backend de herhangi bir yere istek atmıyor.
-- Backend de harita içerisindeki mesafe hesaplanıncca radius değeri metre cinsiden yarıçap
+- Backend de harita içerisindeki mesafe hesaplanınca radius değeri metre cinsiden yarıçap
+
+# Device
+ # Cihaz Sil
+  - *Cihaz silme* işleminde silinen cihazın tokeni frontend den ve veritabanından silinir.
+ # Cihaz Onayla 
+  - *Cihaz onaylama* işleminde bir kullanıcı önceden bir cihaz ile sisteme giriş yapmışsa,ardından farklı bir cihaz ile hesabına tekrar giriş yaparsa cihaz onayı gönderilir.
+  - Admin Onay verirse artık kullanıcının yeni cihazı en son giriş yaptığı cihaz olur onay vermezse eski cihazdan devam eder.

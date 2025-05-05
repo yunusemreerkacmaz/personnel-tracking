@@ -34,10 +34,10 @@ export const UpdateStore = async (input: StoreDto) => {
     }
 }
 
-export const GetStores = async (input: StoreFilterDto) => {
+export const GetStores = async () => {
     try {
         const { axiosInstance } = await getApiUrl()
-        const response: AxiosResponse<ServiceResult<StoreDto>> = await axiosInstance.post(`Store/GetStores`, input);
+        const response: AxiosResponse<ServiceResult<StoreDto>> = await axiosInstance.get(`Store/GetStores`);
         return response.data
     } catch (error) {
         console.log("GetStores error = " + error);

@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react'
-import { View, Text, TouchableOpacity, FlatList, Modal, Alert } from 'react-native';
+import React, { useCallback, useState } from 'react'
+import { View, Text, TouchableOpacity, FlatList, Modal } from 'react-native';
 import { Avatar, Button, Card, Divider, HelperText, IconButton, List, MD3Colors, RadioButton, Searchbar, TextInput, Switch, Chip } from 'react-native-paper';
-import { AddUserDto, GetUserDto, HelperTextDto, initialHelperTextDto } from './Dtos/userDto';
+import { GetUserDto, HelperTextDto, initialHelperTextDto } from './Dtos/userDto';
 import { ResponseStatus } from '../../../ServiceResults/serviceResult';
 import Toast from 'react-native-toast-message';
 import { GenderEnum } from '../../../Enums/GenderEnum';
@@ -12,7 +12,8 @@ import { GetRoles } from '../AddRole/Requests/roleStore';
 import { GetStores } from '../../Stores/Requests/storeRequest';
 import { initialFilterDto, initialStoreDto, StoreDto, StoreFilterDto, } from '../../Stores/Dtos/storeDto';
 import TimePickerRangeModal from '../../Stores/timePickerRangeModal';
-import { TimeDto } from '../../../Helpers/DataGrid/CrudTimeDto';
+import { HelperTextTimeDto, initialHelperTextTimeDto, TimeDto } from '../../../Helpers/DataGrid/CrudTimeDto';
+import { ToastShowParamsCustomType } from '../../../Helpers/Toast/ToastDto';
 
 export default function UpdateUserComponent() {
     const [searchUserValue, setSearchUserValue] = useState("");
@@ -21,23 +22,23 @@ export default function UpdateUserComponent() {
 
     useFocusEffect(
         useCallback(
-          () => {
-            const getUsers = async () => {
-                let temp = true
-                if (temp) {
-                    const responseUsers = await GetUsers()
-                    if (responseUsers?.responseStatus === ResponseStatus.IsSuccess) {
-                        setUsers(responseUsers?.results)
-                        setSearchUser(responseUsers?.results)
+            () => {
+                const getUsers = async () => {
+                    let temp = true
+                    if (temp) {
+                        const responseUsers = await GetUsers()
+                        if (responseUsers?.responseStatus === ResponseStatus.IsSuccess) {
+                            setUsers(responseUsers?.results)
+                            setSearchUser(responseUsers?.results)
+                        }
+                    }
+                    return () => {
+                        temp = false
                     }
                 }
-                return () => {
-                    temp = false
-                }
-            }
-            getUsers();
-          },
-          [],
+                getUsers();
+            },
+            [],
         )
     )
 
@@ -49,6 +50,7 @@ export default function UpdateUserComponent() {
     const handleClear = async () => {
         setSearchUser(users)
     }
+    
     const UpdateUserLeftContent = (props: any) => <Avatar.Icon {...props} color='yellow' icon="account" />
 
     return (
@@ -119,6 +121,7 @@ type UpdateUserModalProps = {
 const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleCloseModal, visible, selectedUser, setSelectedUser, selectedUserItem }) => {
     const [searchRoles, setSearchRoles] = useState<RoleDto[]>([])
     const [formHelperText, setFormHelperText] = useState<HelperTextDto>(initialHelperTextDto)
+    const [helperTextTimeDto, setHelperTextTimeDto] = useState<HelperTextTimeDto>(initialHelperTextTimeDto)
     const [searchRoleValue, setSearchRoleValue] = useState("");
     const [roles, setRoles] = useState<RoleDto[]>([])
     const [stores, setStores] = useState<StoreDto[]>([])
@@ -130,6 +133,16 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
     const [infoMessage, setInfoMessage] = useState<boolean>(false)
     const [shiftTime, setShiftTime] = useState<TimeDto>(selectedUser.shiftTime)
     const [reset, setReset] = useState<boolean>(false)
+
+    var isAdmin = false
+    var isStoreAdmin = false
+
+    if (selectedUser.roleDto.id === 1) {
+        isAdmin = true
+    }
+    if (selectedUser.roleDto.id === 2) {
+        isStoreAdmin = true
+    }
 
     const handleUserExpand = () => setuserExpandListAction(!userExpandListAction)
     const handleStoreExpand = () => setStoreExpandListAction(!storeExpandListAction)
@@ -150,6 +163,7 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
                 selectedUserItem.password === selectedUser.password &&
                 selectedUserItem.storeDto.id === selectedUser.storeDto.id &&
                 selectedUserItem.email === selectedUser.email &&
+                selectedUserItem.phoneNumber === selectedUser.phoneNumber &&
                 selectedUserItem.roleDto.id == selectedUser.roleDto.id &&
                 selectedUserItem.isActive === selectedUser.isActive &&
                 selectedUserItem.gender === selectedUser.gender
@@ -194,7 +208,7 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
 
                 let getStoreAsync = async () => {
                     if (temp) {
-                        const response = await GetStores(filter);
+                        const response = await GetStores();
                         if (response?.responseStatus === ResponseStatus.IsSuccess) {
                             setStores(response?.results)
                             setSearchStores(response?.results)
@@ -214,37 +228,48 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
         )
     )
 
-    const handleAddUser = async (userDto: AddUserDto) => {
-        Alert.alert("Güncelleme İşlemi Onaylama Ekranı", "Personeli güncellemek istediğinizden emin misiniz ?",
-            [
-                {
-                    text: "Güncelle",
-                    isPreferred: true,
-                    onPress: async () => {
-                        let dto: AddUserDto = { ...userDto, shiftTime: shiftTime }
-                        const response = await UpdateUser(dto)
-                        if (response?.responseStatus === ResponseStatus.IsSuccess) {
-                            Toast.show({ text1: "İşlem Başarılı", text2: response.responseMessage, type: 'success' });
-                            setSelectedUser(dto)
-                        }
-                        else {
-                            Toast.show({ text1: "İşlem Başarısız", text2: response?.responseMessage, type: 'error' });
-                        }
-                        handleCloseModal()
-                    },
+    const handleAddUser = async (userDto: GetUserDto) => {
+        handleCloseModal()
+        Toast.show({
+            text1: "Güncelleme İşlemi Onaylama Ekranı",
+            text2: "Personeli güncellemek istediğinizden emin misiniz ?",
+            text1Style: { backgroundColor: 'yellow' },
+            type: 'customToast',
+            autoHide: false,  // ekranda duruyor
+            props: {
+                okButtonText: "Onayla",
+                cancelButtonText: "İptal Et",
+                onCancelPress: () => {
+                    Toast.hide()
+                    Toast.show({ text1: "Güncelleme işlemi iptal edildi", type: 'error' })
                 },
-                {
-                    text: "İptal",
-                }
-            ],
-            { userInterfaceStyle: 'dark', }
-        )
+                onOkPress: async () => {
+                    let dto: GetUserDto = {
+                        ...userDto, shiftTime: shiftTime,
+                    }
+                    const response = await UpdateUser(dto)
+                    if (response?.responseStatus === ResponseStatus.IsSuccess) {
+                        Toast.show({ text1: "İşlem Başarılı", text2: response.responseMessage, type: 'success' });
+                        setSelectedUser(dto)
+                    }
+                    else {
+                        Toast.show({ text1: "İşlem Başarısız", text2: response?.responseMessage, type: 'error' });
+                    }
+                    handleCloseModal()
+                },
+            }
+        } as ToastShowParamsCustomType)
     }
 
-    const handleChange = useCallback((value: any, textName: 'userName' | 'password' | 'firstName' | 'lastName' | 'gender' | 'email' | 'storeDto' | 'roleDto'| 'phoneNumber') => {
+    const handleChange = useCallback((value: any, textName: 'userName' | 'password' | 'firstName' | 'lastName' | 'gender' | 'email' | 'storeDto' | 'roleDto' | 'phoneNumber') => {
         if (typeof value === "string") {
             if (value === "") {
                 setFormHelperText({ ...formHelperText, [textName]: true })
+            }
+            else if (textName === "phoneNumber") {
+                const regex = /^(?:\+90|0)?\s?5\d{2}\s?\d{3}\s?\d{2}\s?\d{2}$/;                         // +90 532 123 45 67  ,  0543 321 12 00    ,  543 321 12 00  bu tipte olanları kabul eder
+                let isValidPhoneNumber = value.match(regex)                                             // numara geçerliyse false değilse true
+                setFormHelperText({ ...formHelperText, [textName]: !isValidPhoneNumber })
             }
             else {
                 setFormHelperText({ ...formHelperText, [textName]: false })
@@ -284,6 +309,10 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
                 setSelectedUser(prev => ({ ...prev, email: value }))
                 break;
 
+            case 'phoneNumber':
+                setSelectedUser(prev => ({ ...prev, phoneNumber: value }))
+                break;
+
             case 'storeDto':
                 setSelectedUser(prev => ({ ...prev, storeDto: value }))
                 break;
@@ -307,16 +336,18 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
             alignItems: 'center',
         }}>
             <View style={{
+                flex: 1,
                 backgroundColor: 'white',
                 alignItems: 'center',
+                justifyContent: 'center',
                 shadowColor: '#000',
                 shadowOpacity: 0.25,
                 shadowRadius: 4,
                 elevation: 5,
             }}
             >
-                <Card elevation={5} style={{}}>
-                    <View style={{ alignItems: 'flex-end', width: '100%', height: 'auto' }}>
+                <Card elevation={5} style={{ marginBottom: 10 }}>
+                    <View style={{ alignItems: 'flex-end', width: '100%', height: '5%' }}>
                         <IconButton
                             icon="close"
                             selected
@@ -329,7 +360,7 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
                             }} />
                     </View>
                     <Card.Title subtitleStyle={{ opacity: 0.5 }} titleStyle={{ fontWeight: 'bold' }} title="KULLANICI BİLGİLERİNİ GÜNCELLE" subtitle="Kullanıcı Bilgilerini Girin" left={UpdateUserLeftContent} />
-                    <Card.Content style={{}}>
+                    <Card.Content style={{ flex: 1 }}>
                         <View style={{ justifyContent: 'center', alignItems: 'center' }}>
                             <TextInput
                                 onBlur={() => { selectedUser.userName && setFormHelperText({ ...formHelperText, userName: selectedUser.userName === "" ? true : false }) }}
@@ -360,7 +391,7 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
                                 style={{ width: 350, minWidth: '75%', height: 40 }}
                                 error={formHelperText.firstName}
                             />
-                            {formHelperText.firstName && <HelperText type="error" visible={formHelperText.firstName}>Lütfen Adı Girin</HelperText>}
+                            {formHelperText.firstName && <HelperText type="error" visible={formHelperText.firstName}>Lütfen Adınızı Girin</HelperText>}
                             <TextInput
                                 onBlur={() => { selectedUser.lastName && setFormHelperText({ ...formHelperText, lastName: selectedUser.lastName === "" ? true : false }) }}
                                 mode='outlined'
@@ -370,8 +401,7 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
                                 style={{ width: 350, minWidth: '75%', height: 40 }}
                                 error={formHelperText.lastName}
                             />
-                           
-                            {formHelperText.email && <HelperText type="error" visible={formHelperText.email}>Lütfen Email Girin</HelperText>}
+                            {formHelperText.lastName && <HelperText type="error" visible={formHelperText.lastName}>Lütfen Soyadınızı Girin</HelperText>}
                             <TextInput
                                 onBlur={() => { selectedUser.email && setFormHelperText({ ...formHelperText, email: selectedUser.email === "" ? true : false }) }}
                                 mode='outlined'
@@ -381,7 +411,7 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
                                 style={{ width: 350, minWidth: '75%', height: 40 }}
                                 error={formHelperText.email}
                             />
-                             {formHelperText.lastName && <HelperText type="error" visible={formHelperText.lastName}>Lütfen Soyadı Girin</HelperText>}
+                            {formHelperText.email && <HelperText type="error" visible={formHelperText.email}>Lütfen Emailinizi Girin</HelperText>}
                             <TextInput
                                 onBlur={() => { selectedUser.phoneNumber && setFormHelperText({ ...formHelperText, phoneNumber: selectedUser.phoneNumber === "" ? true : false }) }}
                                 mode='outlined'
@@ -391,7 +421,7 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
                                 style={{ width: 350, minWidth: '75%', height: 40 }}
                                 error={formHelperText.phoneNumber}
                             />
-                            {formHelperText.email && <HelperText type="error" visible={formHelperText.email}>Lütfen Email Girin</HelperText>}
+                            {formHelperText.phoneNumber && <HelperText type="error" visible={formHelperText.phoneNumber}>Lütfen Geçerli bir Telfon Numarası Girin</HelperText>}
                             <List.Section style={{ width: 350, minWidth: '75%', maxWidth: '100%', display: 'flex', alignItems: 'flex-start' }}>
                                 <List.Accordion
                                     expanded={userExpandListAction}
@@ -445,10 +475,8 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
                                             />
                                         )} />
                                 </List.Accordion>
-
                             </List.Section>
                             {formHelperText.roleDto && <HelperText type="error" visible={formHelperText.roleDto}>Lütfen Yetkiyi Seçin</HelperText>}
-
                             <List.Section style={{ width: 350, minWidth: '75%', maxWidth: '100%', display: 'flex', alignItems: 'flex-start', marginTop: 1 }}>
                                 <List.Accordion
                                     expanded={storeExpandListAction}
@@ -461,8 +489,7 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
                                         alignItems: 'center',
                                         paddingVertical: 0, // Varsayılan iç boşluğu kaldır
                                     }}
-                                    title={selectedUser.storeDto.storeName && selectedUser.storeDto.storeTime.startDate && selectedUser.storeDto.storeTime.endDate ? `${selectedUser.storeDto.storeName} (${selectedUser.storeDto.storeTime.startDate.substring(0,5)} - ${selectedUser.storeDto.storeTime.endDate.substring(0,5)}) ` : "Kurum Seç . . ."}
-
+                                    title={selectedUser.storeDto.storeName && selectedUser.storeDto.storeTime.startDate && selectedUser.storeDto.storeTime.endDate ? `${selectedUser.storeDto.storeName} (${selectedUser.storeDto.storeTime.startDate.substring(0, 5)} - ${selectedUser.storeDto.storeTime.endDate.substring(0, 5)}) ` : "Kurum Seç . . ."}
                                     titleStyle={{
                                         fontSize: 15,
                                         justifyContent: 'center',
@@ -491,7 +518,7 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
                                     />
                                     <List.Item
                                         title=""
-                                        style={{ minWidth: '100%', maxWidth: '75%', backgroundColor: '#D8D8D8', height: 300 }}
+                                        style={{ minWidth: '100%', maxWidth: '75%', backgroundColor: '#D8D8D8', height: 'auto' }}
                                         left={() => (
                                             <FlatList
                                                 data={searchStores}
@@ -503,48 +530,12 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
 
                                         )} />
                                 </List.Accordion>
-                                {/* <List.Item
-                                    title={GenderEnum.Man}
-                                    titleStyle={selectedUser.gender === GenderEnum.Man ? { fontWeight: 'bold', fontSize: 18 } : ""}
-                                    style={{ maxHeight: 30, justifyContent: 'center', alignItems: 'center', }}
-                                    left={() => <>
-                                        <RadioButton
-                                            value={selectedUser.gender}
-                                            uncheckedColor={formHelperText.gender ? 'red' : ""}
-                                            color={MD3Colors.primary70}
-                                            status={selectedUser.gender === GenderEnum.Man ? 'checked' : 'unchecked'}
-                                            onPress={() => {
-                                                handleChange(GenderEnum.Man, 'gender')
-                                            }}
-                                        />
-                                        <List.Icon color={MD3Colors.primary70} icon="human-male" />
-                                    </>}
-                                />
-                                <List.Item
-                                    title={GenderEnum.Woman}
-                                    titleStyle={selectedUser.gender === GenderEnum.Woman ? { fontWeight: 'bold', fontSize: 18 } : ""}
-                                    style={{ maxHeight: 30, justifyContent: 'center', alignItems: 'center' }}
-
-                                    left={() => <>
-                                        <RadioButton
-                                            value={selectedUser.gender}
-                                            color={MD3Colors.tertiary70}
-                                            uncheckedColor={formHelperText.gender ? 'red' : ""}
-                                            status={selectedUser.gender === GenderEnum.Woman ? 'checked' : 'unchecked'}
-                                            onPress={() => {
-                                                handleChange(GenderEnum.Woman, 'gender')
-                                            }}
-                                        />
-                                        <List.Icon color={MD3Colors.tertiary70} icon="human-female" />
-                                    </>}
-                                /> */}
-
                                 <List.Item
                                     title=""
-                                    style={{ minWidth: '100%', maxWidth: '75%', height: 150 }}
+                                    style={{ minWidth: '100%', maxWidth: '75%', height: 120 }}
                                     left={() =>
                                         <View style={{ width: '55%' }}>
-                                            <TimePickerRangeModal setStoreTime={setShiftTime} storeTime={shiftTime} reset={reset} formHelperText={formHelperText} setFormHelperText={setFormHelperText} />
+                                            <TimePickerRangeModal setStoreTime={setShiftTime} storeTime={shiftTime} reset={reset} helperTextTimeDto={helperTextTimeDto} setHelperTextTimeDto={setHelperTextTimeDto} />
                                         </View>
                                     }
                                     right={() =>
@@ -562,7 +553,6 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
                                                 <List.Icon color={MD3Colors.primary70} icon="human-male" />
                                                 <Text style={selectedUser.gender === GenderEnum.Man ? { fontWeight: 'bold', fontSize: 18 } : ""}>Erkek</Text>
                                             </View>
-
                                             <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', height: '20%' }}>
                                                 <RadioButton
                                                     value={selectedUser.gender}
@@ -583,7 +573,7 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
                                 <List.Item
                                     title={
                                         <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginLeft: 2 }}>
-                                            <Text style={[{ fontWeight: 'bold', fontSize: 18 }, selectedUser.roleDto.id===2 ? {color:"gray"}: isActive ? { color: 'green' } : { color: 'red' }]}>{isActive ? "Aktif" : "Pasif"}</Text>
+                                            <Text style={[{ fontWeight: 'bold', fontSize: 18 }, selectedUser.roleDto.id === 2 ? { color: "gray" } : isActive ? { color: 'green' } : { color: 'red' }]}>{isActive ? "Aktif" : "Pasif"}</Text>
                                             <IconButton
                                                 icon="information-outline"
                                                 selected
@@ -599,7 +589,7 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
                                     titleStyle={[{ fontWeight: 'bold', fontSize: 18, marginLeft: 12 }, isActive ? { color: 'green' } : { color: 'red' }]}
                                     style={{ justifyContent: 'center', alignItems: 'center' }}
                                     left={() => <>
-                                        <Switch  value={isActive} trackColor={{ true: "#79AB54", false: "#D5819A" }} thumbColor={selectedUser.roleDto.id==2 ? "gray": isActive ? "green" : "red"} color={selectedUser.roleDto.id==2 ? "gray": isActive ? "green" : "red"} onValueChange={onToggleSwitch}  disabled={selectedUser.roleDto.id===2}/>
+                                        <Switch value={isActive} trackColor={{ true: "#79AB54", false: "#D5819A" }} thumbColor={(isAdmin || isStoreAdmin) ? "gray" : isActive ? "green" : "red"} color={(isStoreAdmin || isAdmin) ? "gray" : isActive ? "green" : "red"} onValueChange={onToggleSwitch} disabled={isStoreAdmin || isAdmin} />
                                     </>}
                                     right={() =>
                                         <TouchableOpacity>
@@ -614,12 +604,11 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
                                             >Güncelle
                                             </Button>
                                         </TouchableOpacity>
-                                        }
+                                    }
                                 />
                                 {formHelperText.gender && <HelperText type="error" visible={formHelperText.gender}>Lütfen Cinsiyet Girin</HelperText>}
-                                {infoMessage && <Chip style={{ backgroundColor: '#ACC8E5', marginTop: 15,maxWidth:'100%',gap:5}} textStyle={{textAlign:'left',flexWrap:'wrap'}} icon="information" >{isActive ? "Personelin Çalışma Durumu aktif" : "Personelin Çalışma Durumu pasif"}</Chip>}
-                                {infoMessage && selectedUser.roleDto.id===2 &&  <Chip style={{ backgroundColor: '#ACC8E5', marginTop: 15,maxWidth:'100%'}} textStyle={{textAlign:'left',flexWrap:'wrap'}} icon="information" >{ "Mağaza Yöneticileri Pasif yada Aktif yapamaz"}</Chip>}
-
+                                {infoMessage && <Chip style={{ backgroundColor: '#ACC8E5', marginTop: 5, maxWidth: '100%', gap: 5 }} textStyle={{ textAlign: 'left', flexWrap: 'wrap' }} icon="information" >{isActive ? "Personelin Çalışma Durumu aktif" : "Personelin Çalışma Durumu pasif"}</Chip>}
+                                {infoMessage && selectedUser.roleDto.id === 2 && <Chip style={{ backgroundColor: '#ACC8E5', marginTop: 5, maxWidth: '100%' }} textStyle={{ textAlign: 'left', flexWrap: 'wrap' }} icon="information" >{"Mağaza Yöneticileri Pasif yada Aktif yapamaz"}</Chip>}
                             </List.Section>
                         </View>
                     </Card.Content>
@@ -628,7 +617,6 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
         </View>
     </Modal>
 })
-
 type StoreItemProps = {
     storeDto: StoreDto,
     user: GetUserDto,
@@ -668,7 +656,6 @@ const StoreItem: React.FC<StoreItemProps> = ({ storeDto, user, handleChange, han
         )}
     />
 )
-
 type RoleItemProps = {
     roleDto: RoleDto, user: GetUserDto,
     handleChange: (value: any, textName: "userName" | "password" | "firstName" | "lastName" | "gender" | "email" | "storeDto" | "roleDto") => void,

@@ -10,7 +10,7 @@ namespace Bussiness.Services.Stores
 {
     public interface IStoreService
     {
-        Task<ServiceResult<StoreDto>> GetStores(StoreFilterDto storeFilterDto);
+        Task<ServiceResult<StoreDto>> GetStores();
         Task<ServiceResult<StoreDto>> AddStore(StoreDto storeDto);
         Task<ServiceResult<StoreDto>> DeleteStore(List<StoreDto> storeDto);
         Task<ServiceResult<StoreDto>> UpdateStore(StoreDto storeDto);
@@ -104,7 +104,7 @@ namespace Bussiness.Services.Stores
                 return new ServiceResult<StoreDto> { ResponseStatus = ResponseStatus.IsError, ResponseMessage = "Hata Oluştu" };
             }
         }
-        public async Task<ServiceResult<StoreDto>> GetStores(StoreFilterDto storeFilterDto)
+        public async Task<ServiceResult<StoreDto>> GetStores()
         {
             var headers = _httpContextAccessor.HttpContext?.Request?.Headers;
             var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
@@ -119,12 +119,7 @@ namespace Bussiness.Services.Stores
 
             var stores = _storeDal.GetAllQueryAble(store => !store.IsDeleted ).Where(x => getUser.RoleId == 1 || x.Id == getUser.StoreId && x.Id != getUser.Id); // admin tümünü görsün mağaza yöneticileri sadece kendi mağazalarını görsün
             var storeList = new List<StoreDto>();
-
-            storeFilterDto.searchValue = storeFilterDto.searchValue.ToLower().Trim();
-            if (!string.IsNullOrEmpty(storeFilterDto.searchValue))                      // Herhangi bir arama yapılmışsa
-            {
-                stores = _storeDal.GetAllQueryAble(x => x.StoreName != null && x.StoreName.ToLower().Trim() == storeFilterDto.searchValue || x.StoreName != null && x.StoreName.ToLower().Trim().Contains(storeFilterDto.searchValue));
-            }
+            
             if (stores.Any())
             {
                 foreach (var store in stores)

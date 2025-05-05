@@ -6,8 +6,6 @@ import ProfileComponent from '../Components/Profil/profil';
 import { ActivityIndicator, Avatar, Badge, IconButton, MD2Colors, Text } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../Store/store';
-import { loginSlice } from '../Components/Login/Requests/LoginSlice';
-import { barcodeSlice } from '../Components/Barcode/Requests/barcodeSlice';
 import { View, Image, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import BarcodeComponent from '../Components/Barcode/camera'
@@ -24,9 +22,11 @@ import NotificationInfoContent from '../Notifications/notificationInfoContent';
 import { NotificationTypeEnum } from '../Enums/NotificationTypeEnum';
 import StoreComponent from '../Components/Stores/index';
 import { getEnvironmentAndBaseUrl } from '../env';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LoginJwtTokenEnum, RememberMeEnum } from '../Enums/JwtTokenEnum';
 import Index from '../Components/Device/index';
+import LogoutComponent from '../Components/Login/logout';
+import * as ScreenOrientation from 'expo-screen-orientation';
+import { screenOrientationStore } from '../Helpers/Screen/screenStore';
+import AdminBarcodeIndex from '../Components/Admin/Barcode';
 
 export type DrawerParamList = {
     Profile: undefined;
@@ -40,23 +40,25 @@ export type DrawerParamList = {
     NavigationStack: undefined
     Location: undefined
     Device: undefined
+    logout: undefined
+    AdminBarcodeApproval:undefined
 };
 type NavigationProps = DrawerNavigationProp<DrawerParamList>;
 
 export default function Navigator() {
     const Drawer = createDrawerNavigator<DrawerParamList>();
-
     const navigationCamera = useNavigation<NavigationProps>();
     const loginState = useSelector((state: RootState) => state.login)
     const barcodeState = useSelector((state: RootState) => state.barcode)
     const dispatch = useDispatch<AppDispatch>()
     const [visible, setvisible] = useState(true)
     const [visibleNotification, setVisibleNotification] = React.useState(false);
-    const [exit, setExit] = useState(false)
     const websocket = useSelector((state: RootState) => state.websocket)
     const Stack = createStackNavigator();
     const [loadingNotification, setLoadingNotification] = useState<boolean>(true)
     const [tempMessages, setTempMessages] = useState<NotificationDto[]>([])
+    const screenOrientation = useSelector((state: RootState) => state.screenOrientationSlice)
+
     var isAdmin = false
     var isStoreAdmin = false
 
@@ -68,6 +70,23 @@ export default function Navigator() {
             isStoreAdmin = true
         }
     }
+
+    useEffect(() => {
+        // İlk yüklemede yönü çek
+        dispatch(screenOrientationStore());
+
+        // Dinleyici ekle
+        const subscription = ScreenOrientation.addOrientationChangeListener(() => {
+            dispatch(screenOrientationStore());
+        });
+
+        // Temizleme
+        return () => {
+            ScreenOrientation.removeOrientationChangeListener(subscription);
+
+        };
+    }, []);
+
     useEffect(() => {
         if (websocket.messages.length >= 0 && loginState.userDto.id == 1) {
             setLoadingNotification(false)
@@ -118,6 +137,20 @@ export default function Navigator() {
                     options={{
                         title: 'Login Ekranına Dön',
                         headerStyle: { backgroundColor: '#CDDCEC' }
+                    }}
+                />
+            </Stack.Navigator>
+        );
+    }
+
+    function LogoutStack() {
+        return (
+            <Stack.Navigator>
+                <Stack.Screen
+                    name="LogoutComponent"
+                    component={LogoutComponent}
+                    options={{
+                        headerShown: false
                     }}
                 />
             </Stack.Navigator>
@@ -180,21 +213,6 @@ export default function Navigator() {
         handleWebsocket()
     }, [dispatch, loginState.userDto.id]);
 
-    const exitFromApp = async (navigation: DrawerNavigationProp<DrawerParamList>) => {
-        if (!loginState.rememberMe) { // Beni Hatırlama seçiliyse hepsini sil                        
-            const allKeys = await AsyncStorage.getAllKeys();
-            // Tüm tokenları sil
-            const authKeys = allKeys.filter(key => key.startsWith(LoginJwtTokenEnum.key));
-            await AsyncStorage.multiRemove(authKeys);
-            await AsyncStorage.removeItem(RememberMeEnum.key)
-            dispatch(loginSlice.actions.loginReset())
-        }
-        dispatch(loginSlice.actions.logout())
-        dispatch(barcodeSlice.actions.barcodeReset())
-        setExit(!exit)
-        navigation.navigate('login')
-    }
-
     const openNotificationList = useCallback(() => { setVisibleNotification(true) }, [visibleNotification])
     const closeNotificationList = useCallback(async () => { setVisibleNotification(false) }, [visibleNotification])
 
@@ -215,7 +233,7 @@ export default function Navigator() {
                     flexWrap: 'wrap',
                 }}>
                     <View style={{ width: '100%' }}>
-                        {loadingNotification ? <Loading /> : <Badge style={{ position: 'absolute', top: 12, left: 36, zIndex: 9999 }}>{websocket.messages.length}</Badge>}
+                        {loadingNotification ? <Loading /> : <Badge style={{ position: 'absolute', top: 12, left: 36, zIndex: 9999 }}>{websocket.messages.filter(x => !x.readStatus).length}</Badge>}
                         <IconButton
                             icon={"cellphone-message"}    // Notification ikonu 
                             size={36}
@@ -251,19 +269,23 @@ export default function Navigator() {
 
     const Content = (props: any) => {
         const navigation = props.navigation as DrawerNavigationProp<DrawerParamList>;
-        return <View style={{ flex: 1, width: 250 }}>
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', borderBottomWidth: 1, borderColor: '#dcdcdc' }}>
-                <Image source={loginState.userDto.gender === GenderEnum.Man ? require('../assets/user_man_icon.png') : loginState.userDto.gender === GenderEnum.Woman ? require('../assets/user_woman_icon.png') : ""}
-                    style={{
-                        width: 100,
-                        height: 100,
-                        marginBottom: 20,
-                        borderRadius: 80
-                    }}
-                />
-                <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 5, color: 'black' }}>{`${loginState.userDto.firstName} ${loginState.userDto.lastName} `}</Text>
+        return <View style={{ flex: 1, width: '100%', }}>
+            <View style={{ flex: 3, width: '100%', justifyContent: 'center', alignItems: 'center', borderBottomWidth: 1, borderColor: '#dcdcdc', flexWrap: 'wrap',paddingTop:10 }}>
+                <View style={{ flex: 3, justifyContent: 'center', alignItems: 'center', width: '100%',height:'100%'}}>
+                    <Image source={loginState.userDto.gender === GenderEnum.Man ? require('../assets/user_man_icon.png') : loginState.userDto.gender === GenderEnum.Woman ? require('../assets/user_woman_icon.png') : ""}
+                        style={{
+                            width: screenOrientation.isPortrait ? 150 : 90,
+                            height: screenOrientation.isPortrait ? 150 : 90,
+                            marginVertical: 10,
+                            borderRadius: 80,
+                        }}
+                    />
+                </View>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center',  }}>
+                    <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 5, color: 'black' }}>{`${loginState.userDto.firstName} ${loginState.userDto.lastName} `}</Text>
+                </View>
             </View>
-            <View style={{ flex: 3 }}>
+            <View style={{ flex: 7 }}>
                 <DrawerContentScrollView>
                     <DrawerItem
                         label={"AnaSayfa"}
@@ -291,7 +313,6 @@ export default function Navigator() {
                             >
                             </DrawerItem>
 
-
                             <DrawerItem
                                 label={"Kurum İşlemleri"}
                                 style={{ backgroundColor: '#D7EBD3', marginBottom: 10 }}
@@ -299,8 +320,6 @@ export default function Navigator() {
                                 onPress={() => navigation.navigate('Location')}
                             >
                             </DrawerItem>
-
-
                         </>
                     }
                     {(isAdmin || isStoreAdmin) &&
@@ -319,16 +338,24 @@ export default function Navigator() {
                                 onPress={() => navigation.navigate('Device')}
                             >
                             </DrawerItem>
+
+                            <DrawerItem
+                                label={"Giriş Çıkış İşlemleri"}
+                                style={{ backgroundColor: '#D7EBD3', marginBottom: 10 }}
+                                icon={() => <Avatar.Icon size={27} icon="devices" />}
+                                onPress={() => navigation.navigate('AdminBarcodeApproval')}
+                            >
+                            </DrawerItem>
                         </>
-
                     }
-
                     {loginState.isLoggedIn &&
                         <DrawerItem
                             label={"Çıkış"}
                             style={{ backgroundColor: '#D7EBD3', marginBottom: 10, }}
                             icon={() => <Avatar.Icon size={27} icon="account-remove" />}
-                            onPress={async () => { await exitFromApp(navigation) }}
+                            // onPress={async () => { await exitFromApp(navigation) }}
+                            onPress={async () => { navigation.navigate('logout') }}
+
                         >
                         </DrawerItem>
                     }
@@ -341,7 +368,8 @@ export default function Navigator() {
             drawerContent={(props) => loginState.isLoggedIn && <Content {...props} />}
             screenOptions={{
                 headerShown: loginState.isLoggedIn,                                        // Drawer içindeki itemların Görünürlük Durumu
-                headerRight: () => headerRightMemo
+                headerRight: () => headerRightMemo,
+                swipeEnabled: loginState.isLoggedIn,
             }}
         >
             <Drawer.Screen
@@ -381,7 +409,7 @@ export default function Navigator() {
                 component={UserComponent}
                 options={{
                     drawerStyle: { width: 250 },
-                    headerShown: true,
+                    headerShown: screenOrientation.isPortrait,
                     title: "Kullanıcı İşlemleri"
                 }}
             />
@@ -407,18 +435,27 @@ export default function Navigator() {
                 component={Index}
                 options={{
                     drawerStyle: { width: 250 },
-                    headerShown: true,
+                    headerShown: screenOrientation.isPortrait,
                     title: 'Cihaz İşlemleri'
                 }}
             />
-            {/* <Drawer.Screen
-                    name="forgotPassword"
-                    component={ForgotPasswordComponent}
-                    options={{
-                        drawerStyle: { width: 250 },
-                        headerShown: false
-                    }}
-                /> */}
+              <Drawer.Screen
+                name="AdminBarcodeApproval"
+                component={AdminBarcodeIndex}
+                options={{
+                    drawerStyle: { width: 250 },
+                    headerShown: screenOrientation.isPortrait,
+                    title:"Giriş Çıkış İşlemleri"
+                }}
+            />
+            <Drawer.Screen
+                name="logout"
+                component={LogoutStack}
+                options={{
+                    drawerStyle: { width: 250 },
+                    headerShown: false
+                }}
+            />
         </Drawer.Navigator>
         {visibleNotification && <NotificationComponent closeNotificationList={closeNotificationList} visibleNotification={visibleNotification} tempMessages={tempMessages} setTempMessages={setTempMessages} />}
     </View>

@@ -130,24 +130,25 @@ const UserItem: React.FC<UserItemProps> = ({ userDto, setCheckedsUser, checkedsU
                 <Tooltip
                     enterTouchDelay={10}
                     leaveTouchDelay={2000}
-                    title={userDto.isActive ?
+                    title={userDto.isHaveBarcode ? "Kullanıcının sistemde barkodu mevcut" :  userDto.isActive ?
                         "Kullanıcı aktif, silmek için pasif hale getirin." :
                         "Kullanıcı sistemde yok, silinebilir"}>
                         <IconButton
                             icon="information-outline"
                             selected
-                            iconColor={userDto.isActive ? 'red' : 'green'}
+                            iconColor={userDto.isHaveBarcode ? "#F5C04F" : userDto.isActive ? 'red' : 'green'}
                             size={24}
                             style={{ justifyContent:'center',alignItems:'center' }}
                             />
                 </Tooltip>
             )}
             left={() =>
-                <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                {
+                  return  <View style={{ justifyContent: 'center', alignItems: 'center' }}>
                     <Checkbox
                         status={checkedsUser.find(x => x.id == userDto.id)?.checkStatus ? 'checked' : 'unchecked'}
-                        color={userDto.isActive ? 'red' : 'green'}
-                        uncheckedColor='green'
+                        color={userDto.isHaveBarcode ? "#F5C04F" : userDto.isActive ? 'red' : 'green'}
+                        uncheckedColor={userDto.isHaveBarcode ? "#F5C04F" : userDto.isActive ? 'red' : 'green'}
                         disabled={userDto.isActive ?? false}
                         onPress={() => {
                             let chedkedStatus = checkedsUser.some(x => x.id == userDto.id)
@@ -161,6 +162,7 @@ const UserItem: React.FC<UserItemProps> = ({ userDto, setCheckedsUser, checkedsU
                         }}
                     />
                 </View>
+                }
             }
         />
         <Divider />

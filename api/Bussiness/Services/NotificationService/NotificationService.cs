@@ -183,7 +183,7 @@ namespace Bussiness.Services.NotificationService
         {
             var notifications = await _notificationDal.GetAllAsync();
 
-            var mapToNotificationDto = notifications.OrderByDescending(x => x.Id).Select(notificationEntity => new NotificationDto
+            var mapToNotificationsDto = notifications.OrderByDescending(x => !x.ReadStatus).Select(notificationEntity => new NotificationDto
             {
                 Id = notificationEntity.Id,
                 ReadStatus = notificationEntity.ReadStatus ?? false,
@@ -197,7 +197,7 @@ namespace Bussiness.Services.NotificationService
                 UpdateStatus = false
             }).ToList();
 
-            var serverMsg = JsonSerializer.Serialize(mapToNotificationDto);
+            var serverMsg = JsonSerializer.Serialize(mapToNotificationsDto);
             await _webSocketManager.SendMessageAsync(serverMsg);
         }
         //public async Task UpdateNotifyAdminAsync(NotificationDto notificationDto)

@@ -14,10 +14,10 @@ namespace personnel_tracking_api.Controllers
         {
             _storeService = storeService;
         }
-        [HttpPost("GetStores")]
-        public async Task<ServiceResult<StoreDto>> GetStores([FromBody] StoreFilterDto storeFilterDto)
+        [HttpGet("GetStores")]
+        public async Task<ServiceResult<StoreDto>> GetStores()
         {
-            var getStores = await _storeService.GetStores(storeFilterDto);
+            var getStores = await _storeService.GetStores();
             return getStores;
         }
         [HttpPost("AddStore")]

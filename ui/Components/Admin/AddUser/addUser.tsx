@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react'
-import { View, TouchableOpacity } from 'react-native';
+import { View } from 'react-native';
 import { Avatar, Button, Card, HelperText, List, MD3Colors, RadioButton, Snackbar, Text, TextInput } from 'react-native-paper';
-import { AddUserDto, GetUserDto, HelperTextDto, initialAddUserDto, initialHelperTextDto } from './Dtos/userDto';
+import { AddUserDto, HelperTextDto, initialAddUserDto, initialHelperTextDto } from './Dtos/userDto';
 import { ResponseStatus } from '../../../ServiceResults/serviceResult';
 import Toast from 'react-native-toast-message';
 import { GenderEnum } from '../../../Enums/GenderEnum';
@@ -13,7 +13,7 @@ import { GetRoles } from '../AddRole/Requests/roleStore';
 import { GetStores } from '../../Stores/Requests/storeRequest';
 import { initialFilterDto, initialStoreDto, StoreDto, StoreFilterDto } from '../../Stores/Dtos/storeDto';
 import TimePickerRangeModal from '../../Stores/timePickerRangeModal';
-import { initialTimeDto, TimeDto } from '../../../Helpers/DataGrid/CrudTimeDto';
+import { HelperTextTimeDto, initialHelperTextTimeDto, initialTimeDto, TimeDto } from '../../../Helpers/DataGrid/CrudTimeDto';
 
 export default function AddUserComponent() {
   const [user, setUser] = useState<AddUserDto>(initialAddUserDto)
@@ -21,7 +21,7 @@ export default function AddUserComponent() {
   const [formHelperText, setFormHelperText] = useState<HelperTextDto>(initialHelperTextDto)
   const [searchRoleValue, setSearchRoleValue] = useState("");
   const [roles, setRoles] = useState<RoleDto[]>([])
-  const [users, setUsers] = useState<GetUserDto[]>([])
+  const [users, setUsers] = useState<AddUserDto[]>([])
   const [stores, setStores] = useState<StoreDto[]>([])
   const [searchStores, setSearchStores] = useState<StoreDto[]>([])
   const [filter, setfilter] = useState<StoreFilterDto>(initialFilterDto)
@@ -30,6 +30,7 @@ export default function AddUserComponent() {
   const [reset, setReset] = useState<boolean>(false)
   const [shiftTime, setShiftTime] = useState<TimeDto>(initialTimeDto)
   const [snackbarVisible, setSnackbarVisible] = useState<boolean>(false)
+  const [helperTextTimeDto, setHelperTextTimeDto] = useState<HelperTextTimeDto>(initialHelperTextTimeDto)
 
   const onToggleSnackBar = () => setSnackbarVisible(!snackbarVisible);
   const onDismissSnackBar = () => setSnackbarVisible(false);
@@ -77,7 +78,7 @@ export default function AddUserComponent() {
 
         let getStoreAsync = async () => {
           if (temp) {
-            const response = await GetStores(filter);
+            const response = await GetStores();
             if (response?.responseStatus === ResponseStatus.IsSuccess) {
               setStores(response?.results)
               setSearchStores(response?.results)
@@ -99,7 +100,7 @@ export default function AddUserComponent() {
   )
 
   const handleAddUser = async (userDto: AddUserDto) => {
-    let dto: AddUserDto = { ...userDto, shiftTime: shiftTime }
+    let dto: AddUserDto = { ...userDto, shiftTime: shiftTime, phoneNumber: userDto.phoneNumber.replaceAll(" ", "") }
     const response = await AddUser(dto);
     if (response?.responseStatus === ResponseStatus.IsSuccess) {
       setUsers(response.results)
@@ -124,10 +125,15 @@ export default function AddUserComponent() {
     }
   }
 
-  const handleChange = (value: any, textName: 'userName' | 'password' | 'firstName' | 'lastName' | 'gender' | 'email' | 'storeDto' | 'roleDto'|'phoneNumber') => {
+  const handleChange = (value: any, textName: 'userName' | 'password' | 'firstName' | 'lastName' | 'gender' | 'email' | 'storeDto' | 'roleDto' | 'phoneNumber') => {
     if (typeof value === "string") {
       if (value === "") {
         setFormHelperText({ ...formHelperText, [textName]: true })
+      }
+      else if (textName === "phoneNumber") {
+        const regex = /^(?:\+90|0)?\s?5\d{2}\s?\d{3}\s?\d{2}\s?\d{2}$/;                         // +90 532 123 45 67  ,  0543 321 12 00    ,  543 321 12 00  bu tipte olanları kabul eder
+        let isValidPhoneNumber = value.match(regex)                                             // numara geçerliyse false değilse true
+        setFormHelperText({ ...formHelperText, [textName]: !isValidPhoneNumber })
       }
       else {
         setFormHelperText({ ...formHelperText, [textName]: false })
@@ -175,9 +181,9 @@ export default function AddUserComponent() {
         setUser({ ...user, roleDto: value })
         break;
 
-        case 'phoneNumber':
-          setUser({ ...user, phoneNumber: value })
-          break;
+      case 'phoneNumber':
+        setUser({ ...user, phoneNumber: value })
+        break;
 
       default:
         break;
@@ -190,7 +196,7 @@ export default function AddUserComponent() {
       title={storeDto.storeName}
       key={storeDto.id}
       titleStyle={[{ justifyContent: 'center', alignItems: 'center' }, storeDto.id === user.storeDto.id ? { color: 'green', fontWeight: 'bold' } : { color: 'gray' }]}
-      style={{justifyContent:'center',alignItems:'center',minWidth: '100%',paddingVertical: 1, }} // Yüksekliği azaltmak için
+      style={{ justifyContent: 'center', alignItems: 'center', minWidth: '100%', paddingVertical: 1, }} // Yüksekliği azaltmak için
       right={(id) => (
         <Button
           icon={user.storeDto.id === storeDto.id ? 'check' : ""}
@@ -247,9 +253,9 @@ export default function AddUserComponent() {
 
   return (
     <ScrollView>
-      <Card elevation={5} style={{ minWidth: '95%', marginTop: 20, marginHorizontal: 10 }}>
+      <Card elevation={5} style={{ flex:1,justifyContent:'center',alignItems:'center',marginTop:8 }}>
         <Card.Title subtitleStyle={{ opacity: 0.5 }} titleStyle={{ fontWeight: 'bold' }} title="KULLANICI BİLGİLERİNİ EKLE" subtitle="Kullanıcı Bilgilerini Girin" left={AddUserLeftContent} />
-        <Card.Content style={{}}>
+        <Card.Content style={{minWidth:'80%'}}>
           <View style={{ justifyContent: 'center', alignItems: 'center' }}>
             <TextInput
               onBlur={() => { user.userName && setFormHelperText({ ...formHelperText, userName: user.userName === "" ? true : false }) }}
@@ -311,9 +317,9 @@ export default function AddUserComponent() {
               error={formHelperText.phoneNumber}
               keyboardType='phone-pad'
               textContentType='telephoneNumber'
-            
+
             />
-            {formHelperText.phoneNumber && <HelperText type="error" visible={formHelperText.phoneNumber}>Lütfen Telefon Girin</HelperText>}
+            {formHelperText.phoneNumber && <HelperText type="error" visible={formHelperText.phoneNumber}>Lütfen geçerli bir telefon numarası girin</HelperText>}
             <List.Section style={{ width: 350, minWidth: '75%', maxWidth: '100%', display: 'flex', alignItems: 'flex-start' }}>
 
               <List.Accordion
@@ -456,7 +462,7 @@ export default function AddUserComponent() {
                 style={{ minWidth: '100%', maxWidth: '75%', height: 120 }}
                 left={() =>
                   <View style={{ width: '55%' }}>
-                    <TimePickerRangeModal setStoreTime={setShiftTime} storeTime={shiftTime} reset={reset} formHelperText={formHelperText} setFormHelperText={setFormHelperText} />
+                    <TimePickerRangeModal setStoreTime={setShiftTime} storeTime={shiftTime} reset={reset} helperTextTimeDto={helperTextTimeDto} setHelperTextTimeDto={setHelperTextTimeDto} />
                   </View>
                 }
                 right={() =>
@@ -494,84 +500,6 @@ export default function AddUserComponent() {
 
                 }
               />
-              {/* <List.Item
-                title=""
-                style={{}}
-                right={() =>
-                  <Button
-                    buttonColor='green'
-                    mode='contained'
-                    style={{ marginTop: 30 }}
-                    disabled={
-                      user.firstName === "" ||
-                      user.lastName === "" ||
-                      user.userName === "" ||
-                      user.password === "" ||
-                      user.gender === "" ||
-                      user.roleDto === initialRoleDto ||
-                      user.storeDto === initialStoreDto
-                    }
-                    onPress={async () => {
-                      await handleAddUser(user)
-                    }}
-                  >Ekle</Button>
-                }
-              /> */}
-              {/* <List.Item
-                title={GenderEnum.Man}
-                titleStyle={user.gender === GenderEnum.Man ? { fontWeight: 'bold', fontSize: 18 } : ""}
-                style={{ maxHeight: 30, justifyContent: 'center', alignItems: 'center', }}
-                left={() => <>
-                  <RadioButton
-                    value={user.gender}
-                    uncheckedColor={formHelperText.gender ? 'red' : ""}
-                    color={MD3Colors.primary70}
-                    status={user.gender === GenderEnum.Man ? 'checked' : 'unchecked'}
-                    onPress={() => {
-                      handleChange(GenderEnum.Man, 'gender')
-                    }}
-                  />
-                  <List.Icon color={MD3Colors.primary70} icon="human-male" />
-                </>}
-              />
-              <List.Item
-                title={GenderEnum.Woman}
-                titleStyle={user.gender === GenderEnum.Woman ? { fontWeight: 'bold', fontSize: 18 } : ""}
-                style={{ maxHeight: 30, justifyContent: 'center', alignItems: 'center' }}
-                right={() =>
-                  <Button
-                    buttonColor='green'
-                    mode='contained'
-                    style={{ height: '100%' }}
-                    disabled={
-                      user.firstName === "" ||
-                      user.lastName === "" ||
-                      user.userName === "" ||
-                      user.password === "" ||
-                      user.gender === "" ||
-                      user.roleDto === initialRoleDto ||
-                      user.storeDto === initialStoreDto
-                    }
-                    onPress={async () => {
-                      await handleAddUser(user)
-                    }}
-                  >Ekle</Button>
-                }
-                left={() => <>
-                  <RadioButton
-                    value={user.gender}
-                    color={MD3Colors.tertiary70}
-                    uncheckedColor={formHelperText.gender ? 'red' : ""}
-                    status={user.gender === GenderEnum.Woman ? 'checked' : 'unchecked'}
-                    onPress={() => {
-                      handleChange(GenderEnum.Woman, 'gender')
-                    }}
-                  />
-                  <List.Icon color={MD3Colors.tertiary70} icon="human-female" />
-                </>} 
-              /> */}
-              {/* {formHelperText.gender && <HelperText type="error" visible={formHelperText.gender}>Lütfen Cinsiyet Girin</HelperText>} */}
-
             </List.Section>
             <Snackbar
               visible={snackbarVisible}
@@ -593,13 +521,11 @@ export default function AddUserComponent() {
             </Snackbar>
           </View>
         </Card.Content>
-        <Card.Actions style={{ backgroundColor: '#E0E2E4', height: '10%', marginTop: 10 }}>
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Card.Actions style={{ backgroundColor: '#E0E2E4', height: 'auto',flex:1,justifyContent:'center',alignItems:'center',marginTop:5  }}>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center'}}>
             <Button
               buttonColor='green'
               mode='contained'
-              // style={{borderStartColor:'red'}}
-              // style={{ marginTop: 30 }}
               disabled={
                 user.firstName === "" ||
                 user.lastName === "" ||

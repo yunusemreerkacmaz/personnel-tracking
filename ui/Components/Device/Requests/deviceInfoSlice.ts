@@ -8,7 +8,11 @@ import { DeviceDto, initialDeviceDto } from "../Dtos/DeviceDto";
 export const deviceInfoSlice = createSlice({
     name: 'deviceInfo',
     initialState: initialDeviceInformationDto,
-    reducers: {},
+    reducers: {
+        deviceReset(state){
+            state=initialDeviceInformationDto
+        }
+    },
     extraReducers: (builder) => {
         builder
             .addCase(deviceInfoStore.fulfilled, (state, action) => {
@@ -43,10 +47,8 @@ export const deviceInfoSlice = createSlice({
 //     }
 // });
 
-export default {
-    deviceInfo: deviceInfoSlice.reducer,
-    // device: deviceSlice.reducer
-};
+export default  deviceInfoSlice.reducer
+
 
 
 

@@ -7,14 +7,10 @@ namespace personnel_tracking_api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class BarcodeController : Controller
+    public class BarcodeController(IBarcodeService barcodeService) : Controller
     {
-       // yunus emre
-        private readonly IBarcodeService _barcodeService;
-        public BarcodeController(IBarcodeService barcodeService)
-        {
-            _barcodeService = barcodeService;
-        }
+        private readonly IBarcodeService _barcodeService = barcodeService;
+
         [HttpPost("BarcodeReadAsync")]
         public async Task<ServiceResult<BarcodeDto>> BarcodeReadAsync([FromBody] BarcodeDto barcodeDto)
         {

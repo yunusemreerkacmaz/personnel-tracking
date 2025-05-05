@@ -16,12 +16,16 @@ namespace Bussiness.Services.HomeService
         {
             var barcodes = await _barcodeDal.GetAllAsync(x => x.UserId == pagination.LoginDto.UserDto.Id);
             var result = new DataGridDto<PersonnelDto>();
-
             barcodes = [.. barcodes.OrderByDescending(x => x.Id)];
             result.Pagination.Total = barcodes.Count;
-            result.Pagination.Page = pagination.Page;
             result.Pagination.PageSize = pagination.PageSize;
+            result.Pagination.Page = pagination.Page;
             barcodes = [.. barcodes.Skip((pagination.Page) * pagination.PageSize).Take(pagination.PageSize)];
+
+            int from = pagination.Page * pagination.PageSize + 1;
+            int to = Math.Min((pagination.Page + 1) * pagination.PageSize, result.Pagination.Total) ;
+            result.Pagination.From = from;
+            result.Pagination.To = to;
             var mapToPersonnelDto = barcodes.Select(barcode => new PersonnelDto
             {
                 Id = barcode.Id,

@@ -1,6 +1,6 @@
-import React, { memo, useCallback, useEffect, useMemo, useState } from 'react'
-import { TouchableOpacity, View, StyleSheet, Role, GestureResponderEvent, FlatList } from 'react-native';
-import { Button, Card, TextInput, Text, Avatar, ToggleButton, Menu, Divider, List, MD3Colors, IconButton, Checkbox, Tooltip } from 'react-native-paper';
+import React, { useCallback, useState } from 'react'
+import { TouchableOpacity, View, FlatList } from 'react-native';
+import { Button, Card, TextInput, Avatar, List, MD3Colors, IconButton, Checkbox, Tooltip } from 'react-native-paper';
 import { AddRole, DeleteRole, GetRoles } from './Requests/roleStore';
 import { initialRoleDto, CheckDto, RoleDto } from './Dtos/roleDto';
 import { ResponseStatus } from '../../../ServiceResults/serviceResult';

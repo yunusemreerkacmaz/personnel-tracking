@@ -40,21 +40,14 @@ namespace Bussiness.Services.BarcodeService
             if (barcodeStatus && locationStatus)                                    // Barkod,Konum ve cihaz bilgileri varsa 
             {
                 var mapToBarcodeDto = new BarcodeDto();
-                var barcode = await _barcodeDal.GetAsync(x => barcodeDto != null && x.UserId == barcodeDto.LoginDto.UserDto.Id && x.StartDate != null && x.StartDate.Value.Date == DateTime.Now.Date);
-                //if (barcode != null && barcode.DeviceToken != null && barcode.CreateTime.HasValue && barcode.CreateTime.Value.Date != DateTime.Now.Date)    // barcode bilgisi varsa ama cihaz bilgisi yoksa 
-                //{
-                //    return new ServiceResult<BarcodeDto> { ResponseStatus = ResponseStatus.IsError, ResponseMessage = "Cihaz bilgisi eşleşmedi.Lüften admin ile görüşüp cihazınızı onaylatın" };
-                //}
-                TimeZoneInfo turkeyTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Turkey Standard Time");
-                DateTime turkeyTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, turkeyTimeZone);
-
+                var barcode = await _barcodeDal.GetAllAsync(x => barcodeDto != null && x.UserId == barcodeDto.LoginDto.UserDto.Id && x.StartDate != null && x.StartDate.Value.Date == DateTime.Now.Date);
                 var device = await _deviceDal.GetAsync(device => device.UserId == user.Id && !device.IsDeleted);
-
-                if (barcode != null && device!=null && device.DeviceToken != null && barcode.StartDate.HasValue && barcode.StartDate.Value.Date == DateTime.Now.Date) // cihaz'ın tokeni varsa ve bugüne aitse
+                var lastBarcode = barcode.LastOrDefault();
+                if (lastBarcode != null && device != null && device.DeviceToken != null && lastBarcode.StartDate.HasValue && lastBarcode.StartDate.Value.Date == DateTime.Now.Date) // cihaz'ın tokeni varsa ve bugüne aitse
                 {
                     var storeEntity = await _storeDal.GetAsync(x => user != null && x.Id == user.StoreId);
-                    mapToBarcodeDto.Id = barcode.Id;
-                    mapToBarcodeDto.LocationDto = new LocationDto { Latitude = barcode.Latitude, Longitude = barcode.Longtitude };
+                    mapToBarcodeDto.Id = lastBarcode.Id;
+                    mapToBarcodeDto.LocationDto = new LocationDto { Latitude = lastBarcode.Latitude, Longitude = lastBarcode.Longtitude };
                     mapToBarcodeDto.LoginDto = new LoginDto
                     {
                         UserDto = new UserDto
@@ -98,36 +91,36 @@ namespace Bussiness.Services.BarcodeService
                         }
                     }
                     : new StoreDto();
-                    if (barcode.Entreance == true && barcode.StartDate != null && barcodeDto?.BarcodeReadEnum == BarcodeReadEnum.Entreance) // Sisteme Giriş Yapmamışsa
+                    if (lastBarcode.Entreance == true && lastBarcode.StartDate != null && barcodeDto?.BarcodeReadEnum == BarcodeReadEnum.Entreance) // Sisteme Giriş Yapmamışsa
                     {
                         return new ServiceResult<BarcodeDto> { Result = mapToBarcodeDto, ResponseStatus = ResponseStatus.IsWarning, ResponseMessage = "Giriş işlemi öncesinde yapıldı." };
                     }
-                    else if (barcode.Entreance != true && barcode.StartDate == null) // Sisteme Giriş Yapmışsa
+                    else if (lastBarcode.Entreance != true && lastBarcode.StartDate == null) // Sisteme Giriş Yapmışsa
                     {
                         mapToBarcodeDto.BarcodeReadEnum = BarcodeReadEnum.Entreance;
                         mapToBarcodeDto.Data = "Modalife Giriş";
                     }
-                    else if (barcode.Entreance == true && barcode.StartDate != null && barcodeDto?.BarcodeReadEnum == BarcodeReadEnum.Exit && barcode.EndDate == null)  // Sisteme giriş yapmışsa ve çıkış yapmak istiyorsa
+                    else if (lastBarcode.Entreance == true && lastBarcode.StartDate != null && barcodeDto?.BarcodeReadEnum == BarcodeReadEnum.Exit && lastBarcode.EndDate == null)  // Sisteme giriş yapmışsa ve çıkış yapmak istiyorsa
                     {
                         mapToBarcodeDto.BarcodeReadEnum = BarcodeReadEnum.Exit;
                         mapToBarcodeDto.Data = "Modalife Çıkış";
                     }
-                    else if (barcode.Exit == true && barcode.EndDate != null && barcodeDto?.BarcodeReadEnum == BarcodeReadEnum.Exit)  // Sistemden çıkış yapmışsa
+                    else if (lastBarcode.Exit == true && lastBarcode.EndDate != null && barcodeDto?.BarcodeReadEnum == BarcodeReadEnum.Exit)  // Sistemden çıkış yapmışsa
                     {
                         mapToBarcodeDto.BarcodeReadEnum = BarcodeReadEnum.Exit;
                         return new ServiceResult<BarcodeDto> { Result = mapToBarcodeDto, ResponseStatus = ResponseStatus.IsWarning, ResponseMessage = "Çıkış işlemi öncesinde yapıldı." };
                     }
-                    else if (barcode.Entreance == true && barcode.StartDate != null && barcodeDto?.BarcodeReadEnum == BarcodeReadEnum.Default && barcode.Exit == null && barcode.EndDate == null) // Profil sayfasında istek attığında giriş yapılmışsa
+                    else if (lastBarcode.Entreance == true && lastBarcode.StartDate != null && barcodeDto?.BarcodeReadEnum == BarcodeReadEnum.Default && lastBarcode.Exit == null && lastBarcode.EndDate == null) // Profil sayfasında istek attığında giriş yapılmışsa
                     {
                         mapToBarcodeDto.BarcodeReadEnum = BarcodeReadEnum.Entreance;
                         return new ServiceResult<BarcodeDto> { Result = mapToBarcodeDto, ResponseStatus = ResponseStatus.IsWarning };
                     }
-                    else if (barcode.Exit == true && barcode.EndDate != null && barcodeDto?.BarcodeReadEnum == BarcodeReadEnum.Default) // Profil sayfasında istek attığında çıkış yapılmışsa
+                    else if (lastBarcode.Exit == true && lastBarcode.EndDate != null && barcodeDto?.BarcodeReadEnum == BarcodeReadEnum.Default) // Profil sayfasında istek attığında çıkış yapılmışsa
                     {
                         mapToBarcodeDto.BarcodeReadEnum = BarcodeReadEnum.Exit;
                         return new ServiceResult<BarcodeDto> { Result = mapToBarcodeDto, ResponseStatus = ResponseStatus.IsWarning };
                     }
-                    else if (barcode.Exit == true && barcode.EndDate != null && barcodeDto?.BarcodeReadEnum == BarcodeReadEnum.Default && turkeyTime.Date > barcode.EndDate) // Profil sayfasındayken bir sonraki güne geçtiğinde Giriş veya çıkış yapılmadı yazısını yaz
+                    else if (lastBarcode.Exit == true && lastBarcode.EndDate != null && barcodeDto?.BarcodeReadEnum == BarcodeReadEnum.Default && DateTime.Now.Date > lastBarcode.EndDate) // Profil sayfasındayken bir sonraki güne geçtiğinde Giriş veya çıkış yapılmadı yazısını yaz
                     {
                         mapToBarcodeDto.BarcodeReadEnum = BarcodeReadEnum.Default;
                         return new ServiceResult<BarcodeDto> { Result = mapToBarcodeDto, ResponseStatus = ResponseStatus.IsWarning, ResponseMessage = "Lütfen giriş yapın" };
@@ -171,46 +164,51 @@ namespace Bussiness.Services.BarcodeService
                 barcodeDto.LocationDto.Latitude != null &&
                 barcodeDto.LocationDto.AreaControl != null;
 
-            var device = await _deviceDal.GetAsync(x => x.UserId == user.Id);
+            var device = await _deviceDal.GetAsync(x => x.UserId == user.Id && !x.IsDeleted);
             var deviceStatus = user != null && user.Id > 0 && device?.DeviceBrand != null && device.DeviceModelName != null;       // veritabanında kullanıcı bilgileri ve frontend den gönderilen cihaz bigileri var mı
 
             if (barcodeStatus && locationStatus && deviceStatus)
             {
                 var mapToBarcodeDto = new BarcodeDto();
 
-                var barcode = await _barcodeDal.GetAsync(x => barcodeDto != null && x.UserId == barcodeDto.LoginDto.UserDto.Id && x.StartDate != null && x.StartDate.Value.Date == DateTime.Now.Date);
+                var barcode = await _barcodeDal.GetAllAsync(x => barcodeDto != null && x.UserId == barcodeDto.LoginDto.UserDto.Id && x.StartDate != null && x.StartDate.Value.Date == DateTime.Now.Date);
+                var lastBarcode = barcode.LastOrDefault();
                 var barcodeEntity = new Barcode();
                 var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-              
-                //mapToBarcodeDto.DeviceModelName = barcodeDto?.DeviceModelName ?? "";
-                //mapToBarcodeDto.DeviceBrand = barcodeDto?.DeviceBrand;
 
                 barcodeEntity.UserId = barcodeDto?.LoginDto.UserDto.Id;
                 barcodeEntity.Longtitude = barcodeDto?.LocationDto?.Longitude;
                 barcodeEntity.Latitude = barcodeDto?.LocationDto?.Latitude;
                 barcodeEntity.AreaControl = barcodeDto?.LocationDto?.AreaControl;
+                barcodeEntity.ApprovingAuthorityId = user!=null ? user.Id : 0;
 
-                if (barcode == null && barcodeDto?.BarcodeReadEnum == BarcodeReadEnum.Entreance)    // ilk defa giriş yapıyorsa                                                                // Barkod ilk defa okutuluyorsa ekleme işlemi yapılacak
+                if ((lastBarcode == null && barcodeDto?.BarcodeReadEnum == BarcodeReadEnum.Entreance) || (lastBarcode != null && barcodeDto != null && lastBarcode.Entreance == true && lastBarcode.Exit == true && barcodeDto.BarcodeReadEnum!=BarcodeReadEnum.Exit))    // ilk defa giriş yapıyorsa                                                                
                 {
                     barcodeEntity.Entreance = true;
                     barcodeEntity.StartDate = DateTime.Now;
-                    barcodeEntity.DeviceId = device.Id;
+                    barcodeEntity.DeviceId = device?.Id;
 
                     var distance = CalculateDistance(barcodeDto.LocationDto.Latitude, barcodeDto.LocationDto.Longitude, barcodeDto.StoreDto.StoreLocation.Latitude, barcodeDto.StoreDto.StoreLocation.Longitude);
                     if (distance.HasValue && distance != 0 && barcodeDto.StoreDto.Radius != 0 && distance <= barcodeDto.StoreDto.Radius)
                     {
-                        barcodeDto.LocationDto.AreaControl = true;
+                        barcodeDto.LocationDto.AreaControl = true;      // barkodu okutan alan içinde 
                         barcodeEntity.AreaControl = true;
                     }
                     else
                     {
-                        barcodeDto.LocationDto.AreaControl = false;
+                        barcodeDto.LocationDto.AreaControl = false;       // barkodu okutan alan dışında 
                         barcodeEntity.AreaControl = false;
                     }
 
                     var addedEntity = await _barcodeDal.AddAsync(barcodeEntity);
                     if (addedEntity != null && addedEntity.Id > 0)
                     {
+                        if (user != null)                           // Kullanıcı barkodu okuttuğunda sistemden silinemesin(Pasife alınırsa silinebilsin)
+                        {
+                            user.IsActive = true;
+                            await _userDal.UpdateAsync(user);
+                        }
+
                         mapToBarcodeDto.BarcodeReadEnum = BarcodeReadEnum.Entreance;
                         mapToBarcodeDto.Data = "Modalife Giriş";
                         mapToBarcodeDto.Id = addedEntity.Id;
@@ -267,18 +265,14 @@ namespace Bussiness.Services.BarcodeService
                         return new ServiceResult<BarcodeDto> { ResponseStatus = ResponseStatus.IsError, ResponseMessage = "Hata Oluştu emre" };
                     }
                 }
-                else if (barcode != null && barcodeDto?.BarcodeReadEnum == BarcodeReadEnum.Exit)       // Barkod okutulmuşsa ve çıkış işlemi yapılıyorsa güncelleme yapılacak
+                else if (lastBarcode != null && barcodeDto?.BarcodeReadEnum == BarcodeReadEnum.Exit)       // Barkod okutulmuşsa ve çıkış işlemi yapılıyorsa güncelleme yapılacak
                 {
-                    TimeZoneInfo turkeyTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Turkey Standard Time");
-                    DateTime turkeyTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, turkeyTimeZone);
-
-
-                    if (barcode.Id > 0 && barcode.Exit == true && barcodeDto.BarcodeReadEnum == BarcodeReadEnum.Exit && barcode.EndDate != null)
+                    if (lastBarcode!=null && lastBarcode.Id > 0 && lastBarcode.Exit == true && barcodeDto.BarcodeReadEnum == BarcodeReadEnum.Exit && lastBarcode.EndDate != null)
                     {
                         return new ServiceResult<BarcodeDto> { ResponseMessage = "Çıkış işlemini tekrar yapmanıza gerek yok", ResponseStatus = ResponseStatus.IsWarning };
                     }
 
-                    var isUserOffShift = barcode.EndDate == null && DateTime.Now.TimeOfDay < user.EndTime.Value.ToTimeSpan();
+                    var isUserOffShift = lastBarcode!=null &&  lastBarcode.EndDate == null && user != null && user.EndTime != null && DateTime.Now.TimeOfDay < user.EndTime.Value.ToTimeSpan();
                     // yukarıdaki kodda saatleri barcode'un önce gününü kontrol et eğer gün uyuşuyorsa saatini ve kullanıcının saatini kontrol et eğer barcode un saati yoksa yani çıkış yapmamışsa 
 
                     if (isUserOffShift && barcodeDto.Data != "isUserOffShift")
@@ -293,27 +287,27 @@ namespace Bussiness.Services.BarcodeService
                         mapToBarcodeDto.Data = "isUserOffShift";
                         return new ServiceResult<BarcodeDto> { ResponseMessage = "Vardiyanız dolmadan çıkış işlemi yapmak üzeresiniz.Çıkış yapmak istediğinizden emin misiniz ?", ResponseStatus = ResponseStatus.IsWarning, Result = mapToBarcodeDto };
                     }
-                    barcode.Exit = true;
-                    barcode.EndDate = turkeyTime;
+                    lastBarcode.Exit = true;
+                    lastBarcode.EndDate = DateTime.Now;
 
                     var distance = CalculateDistance(barcodeDto.LocationDto.Latitude, barcodeDto.LocationDto.Longitude, barcodeDto.StoreDto.StoreLocation.Latitude, barcodeDto.StoreDto.StoreLocation.Longitude);
                     if (distance.HasValue && distance != 0 && barcodeDto.StoreDto.Radius != 0 && distance <= barcodeDto.StoreDto.Radius)
                     {
                         barcodeDto.LocationDto.AreaControl = true;
-                        barcode.AreaControl = true;
+                        lastBarcode.AreaControl = true;
                     }
                     else
                     {
                         barcodeDto.LocationDto.AreaControl = false;
-                        barcode.AreaControl = false;
+                        lastBarcode.AreaControl = false;
                     }
 
-                    var updateEntity = await _barcodeDal.UpdateAsync(barcode);
+                    var updateEntity = await _barcodeDal.UpdateAsync(lastBarcode);
                     if (updateEntity)
                     {
                         mapToBarcodeDto.BarcodeReadEnum = BarcodeReadEnum.Exit;
                         mapToBarcodeDto.Data = "Modalife Çıkış";
-                        mapToBarcodeDto.Id = barcode.Id;
+                        mapToBarcodeDto.Id = lastBarcode.Id;
                         mapToBarcodeDto.LoginDto = new LoginDto
                         {
                             IsLoggedIn = barcodeDto.LoginDto.IsLoggedIn,
@@ -338,10 +332,10 @@ namespace Bussiness.Services.BarcodeService
                                 UserName = user?.UserName ?? ""
                             }
                         };
-                        mapToBarcodeDto.LocationDto = new LocationDto { Latitude = barcode.Latitude, Longitude = barcode.Longtitude };
+                        mapToBarcodeDto.LocationDto = new LocationDto { Latitude = lastBarcode.Latitude, Longitude = lastBarcode.Longtitude };
                         mapToBarcodeDto.StoreDto = new StoreDto
                         {
-                            Id = barcode.Id,
+                            Id = lastBarcode.Id,
                             IsActive = store.IsActive,
                             Radius = store.Radius,
                             StoreName = store.StoreName,
@@ -365,11 +359,11 @@ namespace Bussiness.Services.BarcodeService
                         return new ServiceResult<BarcodeDto> { ResponseStatus = ResponseStatus.IsError, ResponseMessage = "Barkod Güncelleme Hatası" };
                     }
                 }
-                else if ((barcode != null || barcode?.Entreance == null) && barcodeDto?.BarcodeReadEnum == BarcodeReadEnum.Exit)
+                else if ((barcode != null || lastBarcode?.Entreance == null) && barcodeDto?.BarcodeReadEnum == BarcodeReadEnum.Exit)
                 {
                     return new ServiceResult<BarcodeDto> { ResponseStatus = ResponseStatus.IsError, ResponseMessage = "Giriş işleminiz olmadığından çıkış yapamazsınız" };
                 }
-                else if (barcode != null && barcodeDto?.BarcodeReadEnum == BarcodeReadEnum.Entreance)
+                else if (barcode != null && lastBarcode.Entreance==true && lastBarcode.Exit==null && barcodeDto?.BarcodeReadEnum == BarcodeReadEnum.Entreance)
                 {
                     return new ServiceResult<BarcodeDto> { ResponseStatus = ResponseStatus.IsWarning, ResponseMessage = "Giriş işlemini tekrar yapmanıza gerek yok" };
                 }

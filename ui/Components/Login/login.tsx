@@ -1,6 +1,6 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react'
-import { View, SafeAreaView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, SafeAreaView, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { DrawerParamList } from '../../Navigator/navigator';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -27,6 +27,7 @@ export default function Login() {
   const loginState = useSelector((state: RootState) => state.login)
   const [login, setLogin] = useState<LoginDto>(loginState)
   const [isSwitchOn, setIsSwitchOn] = React.useState(loginState.rememberMe);
+  const screen = useSelector((state: RootState) => state.screenOrientationSlice)
 
   const onfocus = () => {
     if (login.userDto.userName === "") {
@@ -75,46 +76,55 @@ export default function Login() {
       flag = false
     }, []));
 
-
   const styles = StyleSheet.create({
     safeAreaView: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      flex: 1
-    },
-    image: {
       flex: 1,
-      width: '100%',
-      justifyContent: 'center',
       alignItems: 'center',
+      justifyContent: 'center',
     },
-    input: {
-      height: 40,
-      width: 300
+    linearGradient: {
+      flex: 1,
+      opacity: 0.76,
+      width: '100%',
+      height: '100%',
+      justifyContent: 'center',
+      alignItems: 'center'
     },
     card: {
-      display: 'flex',
+      flex: screen.isPortrait ? 2 / 4 : 1,
       flexWrap: 'wrap',
       justifyContent: 'center',
       alignItems: 'center',
       opacity: 0.95,
       borderRadius: 30,
     },
-    CardContent: {
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      width: '100%',
-    },
     cardTitle: {
-      display: 'flex',
+      flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      marginBottom: 60,
-      marginTop: 20
     },
-
+    CardContent: {
+      flex: 3,
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    cardAction: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    image: {
+      flex: 1,
+      width: '100%',
+      justifyContent: 'center',
+      alignItems: 'center',
+      flexWrap: 'wrap'
+    },
+    input: {
+      // height: 40,
+      width: 300
+    },
   });
 
   const handleChange = (text: any, textName: string) => {
@@ -172,7 +182,6 @@ export default function Login() {
             })
             setFormHelperText({ ...formHelperText, password: false, username: false });
             navigation.navigate('Profile');
-
           }
           else {
             Toast.show({
@@ -205,19 +214,14 @@ export default function Login() {
     <SafeAreaView style={styles.safeAreaView}>
       <LinearGradient
         colors={['black', '#3F638C']}
-        style={{
-          opacity: 0.76, display: 'flex', width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center'
-        }}
+        style={styles.linearGradient}
       >
-        <LinearGradient
-          colors={['red', 'blue']}
-          style={{ borderRadius: 30, opacity: 0.85, alignSelf: 'center' }}
-        >
-          <Card style={styles.card}>
-            <View style={styles.cardTitle}>
-              <Avatar.Icon size={70} icon="account" />
-            </View>
-            <Card.Content style={styles.CardContent}>
+        {screen.status && <Card style={styles.card}>
+          <View style={styles.cardTitle}>
+            <Avatar.Icon size={70} icon="account" />
+          </View>
+          <Card.Content style={styles.CardContent}>
+            <View style={{ flex: 4, justifyContent: 'center', alignItems: 'center' }}>
               <TextInput
                 style={styles.input}
                 ref={inputRef1}
@@ -230,11 +234,7 @@ export default function Login() {
                 label="Kullanıcı Adı"
                 error={formHelperText.username}
               />
-              <HelperText type="error"
-                visible={formHelperText.username}
-              >
-                Lütfen Kullanıcı Adı Girin
-              </HelperText>
+              {formHelperText.username && <HelperText type="error" visible={formHelperText.username}> Lütfen Kullanıcı Adı Girin </HelperText>}
               <TextInput
                 style={styles.input}
                 ref={inputRef2}
@@ -247,28 +247,26 @@ export default function Login() {
                 label="Şifre"
                 error={formHelperText.password}
               />
-              <HelperText type="error"
-                visible={formHelperText.password}
-              >
-                Lütfen Şifre Girin
-              </HelperText>
-              <View >
-                <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-                  <Switch value={isSwitchOn} onValueChange={onToggleSwitch} color={isSwitchOn ? 'green' : 'red'} thumbColor={isSwitchOn ? 'green' : 'red'} />
-                  <Chip style={{ backgroundColor: isSwitchOn ? '#77A97C' : '#E46B6B', marginLeft: 10 }}  >{isSwitchOn ? "Beni Hatırla" : "Unut"}</Chip>
-                </View>
+              {formHelperText.password && <HelperText type="error" visible={formHelperText.password}>Lütfen Şifre Girin</HelperText>}
+            </View>
+            <View style={{ flex: 1, flexWrap: 'wrap' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', }}>
+                <Switch value={isSwitchOn} onValueChange={onToggleSwitch} color={isSwitchOn ? 'green' : 'red'} thumbColor={isSwitchOn ? 'green' : 'red'} />
+                <Chip style={{ backgroundColor: isSwitchOn ? '#77A97C' : '#E46B6B', marginLeft: 10 }}  >{isSwitchOn ? "Beni Hatırla" : "Unut"}</Chip>
+              </View>
+              <View>
                 <Button onPress={() => {
                   navigation.navigate('forgotPassword')
                 }}>Şifremi Unuttum</Button>
               </View>
-              <View style={{ margin: 20 }}>
-                <TouchableOpacity>
-                  <Button contentStyle={{ width: 200, backgroundColor: '#533285' }} disabled={login.userDto.userName === "" || login.userDto.password === ""} mode='contained' onPress={() => { handleSubmit() }}>Giriş yap</Button>
-                </TouchableOpacity>
-              </View>
-            </Card.Content>
-          </Card>
-        </LinearGradient>
+            </View>
+          </Card.Content>
+          <View style={styles.cardAction}>
+            <TouchableOpacity>
+              <Button contentStyle={{ width: 200, backgroundColor: '#533285' }} disabled={login.userDto.userName === "" || login.userDto.password === ""} mode='contained' onPress={() => { handleSubmit() }}>Giriş yap</Button>
+            </TouchableOpacity>
+          </View>
+        </Card>}
       </LinearGradient>
     </SafeAreaView>
   </SafeAreaProvider>

@@ -2,19 +2,19 @@ import React, { useState } from 'react'
 import { View } from 'react-native';
 import { HelperText, TextInput } from 'react-native-paper';
 import { TimePickerModal } from 'react-native-paper-dates';
-import { initialTimeDto, TimeDto } from '../../Helpers/DataGrid/CrudTimeDto';
+import { HelperTextTimeDto, initialTimeDto, TimeDto } from '../../Helpers/DataGrid/CrudTimeDto';
 import { HelperTextDto } from '../Admin/AddUser/Dtos/userDto';
 
 interface IProps {
     reset: boolean,
     setStoreTime: React.Dispatch<React.SetStateAction<TimeDto>>,
     storeTime: TimeDto,
-    setFormHelperText: React.Dispatch<React.SetStateAction<HelperTextDto>>,
-    formHelperText: HelperTextDto
+    setHelperTextTimeDto: React.Dispatch<React.SetStateAction<HelperTextTimeDto>>,
+    helperTextTimeDto: HelperTextDto
 }
 
 export default function TimePickerRangeModal(props: IProps) {
-    const { reset, setStoreTime, storeTime, formHelperText, setFormHelperText } = props
+    const { reset, setStoreTime, storeTime, helperTextTimeDto, setHelperTextTimeDto } = props
     const [startOpen, setStartOpen] = useState(false);
     const [endOpen, setEndOpen] = useState(false);
     const [localTime, setLocalTime] = useState<TimeDto>(initialTimeDto)
@@ -47,7 +47,7 @@ export default function TimePickerRangeModal(props: IProps) {
             ...prev,
             startDate: `${hours < 10 ? "0" + hours : hours}:${minutes < 10 ? "0" + minutes : minutes}`
         }))
-        setFormHelperText(prev => ({ ...prev, startDate: false }))
+        setHelperTextTimeDto(prev => ({ ...prev, startDate: false }))
         setStartOpen(false);
     };
 
@@ -64,7 +64,7 @@ export default function TimePickerRangeModal(props: IProps) {
             ...prev,
             endDate: `${hours < 10 ? "0" + hours : hours}:${minutes < 10 ? "0" + minutes : minutes}`
         }))
-        setFormHelperText(prev => ({ ...prev, endDate: false }))
+        setHelperTextTimeDto(prev => ({ ...prev, endDate: false }))
         setEndOpen(false);
     };
 
@@ -72,33 +72,33 @@ export default function TimePickerRangeModal(props: IProps) {
         {/* Başlangıç Saati Seçici */}
         <TextInput                                                                                              // saatin yazıldığı text (startDate)
             label="Başlangıç Saati"
-            onBlur={() => { localTime.startDate && setFormHelperText({ ...formHelperText, startDate: storeTime.startDate ? false : true }) }}
+            onBlur={() => { localTime.startDate && setHelperTextTimeDto({ ...helperTextTimeDto, startDate: storeTime.startDate ? false : true }) }}
             value={localTime.startDate?.substring(0,5) || ""}
             mode="outlined"
             right={<TextInput.Icon icon="clock" onPress={() => {                                                // Saat ikonuna tıklandığında (startDate)
                 setStartOpen(true)
                 if (!localTime.startDate) {
-                    setFormHelperText(prev => ({ ...prev, startDate: true }))
+                    setHelperTextTimeDto(prev => ({ ...prev, startDate: true }))
                 }
             }} />}
             editable={false}
         />
-        {formHelperText.startDate && <HelperText type="error" visible={formHelperText.startDate}>Lütfen başlangıç saati girin </HelperText>}
+        {helperTextTimeDto.startDate && <HelperText type="error" visible={helperTextTimeDto.startDate}>Lütfen başlangıç saati girin </HelperText>}
         {/* Bitiş Saati Seçici */}
         <TextInput
             label="Bitiş Saati"                                                                                 // saatin yazıldığı text (endDate)
-            onBlur={() => { localTime.endDate && setFormHelperText({ ...formHelperText, endDate: storeTime.endDate ? false : true }) }}
+            onBlur={() => { localTime.endDate && setHelperTextTimeDto({ ...helperTextTimeDto, endDate: storeTime.endDate ? false : true }) }}
             value={localTime.endDate?.substring(0,5) || ""}
             mode="outlined"
             right={<TextInput.Icon icon="clock" onPress={() => {                                                 // Saat ikonuna tıklandığında (startDate)
                 setEndOpen(true)
                 if (!localTime.endDate) {
-                    setFormHelperText(prev => ({ ...prev, endDate: true }))
+                    setHelperTextTimeDto(prev => ({ ...prev, endDate: true }))
                 }
             }} />}
             editable={false}
         />
-        {formHelperText.endDate && <HelperText type="error" visible={formHelperText.endDate}>Lütfen bitiş saati girin </HelperText>}
+        {helperTextTimeDto.endDate && <HelperText type="error" visible={helperTextTimeDto.endDate}>Lütfen bitiş saati girin </HelperText>}
         {/* Başlangıç Saati  modalı */}
         <TimePickerModal
             locale="tr"

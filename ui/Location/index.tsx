@@ -18,110 +18,6 @@ export default function LocationComponent() {
   const [expanded, setExpanded] = React.useState(false);
   const locationState = useSelector((state: RootState) => state.location)
   const barcodeState = useSelector((state: RootState) => state.barcode)
-  // const [areaControl, setAreaControl] = useState<boolean>(false)
-  
-  // async function calculateDistance(lat1: number | undefined, lon1: number | undefined, lat2: number, lon2: number | undefined) {
-  //   const R = 6371000; // Dünya'nın yarıçapı (metre cinsinden)
-  //   const toRadians = (degree: number) => (degree * Math.PI) / 180;
-
-  //   const dLat = lat1 && lat2 && toRadians(lat2 - lat1);
-  //   const dLon = lon1 && lon2 && toRadians(lon2 - lon1);
-
-  //   const a = dLat && dLon &&
-  //     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-  //     Math.cos(toRadians(lat1)) *
-  //     Math.cos(toRadians(lat2)) *
-  //     Math.sin(dLon / 2) *
-  //     Math.sin(dLon / 2);
-
-  //     console.log("a = ",a);
-      
-
-  //   const c = a && 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  //   return c && R * c; // Mesafeyi metre cinsinden döndürür
-  // }
-
-  // const isWithinArea = async () => {
-  //   //  Kullanıcı konumunu al
-
-  //   const deviceLatitude = locationState?.coords.latitude;
-  //   const deviceLongitude = locationState?.coords.longitude;
-
-  //   console.log("deviceLatitude = ",deviceLatitude);
-  //   console.log("deviceLongitude = ",deviceLongitude);
-
-
-  //   // const deviceLatitude= 40.040375 // alan içinde bir konum(örnek kod)
-  //   // const deviceLongitude = 32.908079; // alan içinde bir konum(örnek kod)
-
-
-  //   if (deviceLatitude && deviceLongitude) {
-  //     //  Alanı tanımla (Modalife konumu )
-
-  //     // const areaCenterLatitude = 40.04144575513158 // Alanın merkez noktası
-  //     // const areaCenterLongitude = 32.908030908625896;
-  //     // const areaRadius = 5000; // 5000 metre (5 km)
-
-  //     const areaCenterLatitude = barcodeState.storeDto.storeLocation.latitude;
-  //     const areaCenterLongitude = barcodeState.storeDto.storeLocation.longitude;
-  //     const areaRadius = barcodeState.storeDto.radius
-
-  //     //  Cihazın alan içinde olup olmadığını kontrol et
-
-  //     const distance = await calculateDistance(
-  //       deviceLatitude,
-  //       deviceLongitude,
-  //       areaCenterLatitude,
-  //       areaCenterLongitude
-  //     );
-  //     console.log("distance = ",distance);
-  //     console.log("areaRadius = ",areaRadius);
-  //     console.log("areaCenterLatitude = ",areaCenterLatitude);
-  //     console.log("areaCenterLongitude = ",areaCenterLongitude);
-
-  //     let locationSliceDto: LocationSliceDto = {
-  //       areaControl: false,
-  //       coords: locationState.coords,
-  //       mocked: locationState.mocked,
-  //       timestamp: locationState.timestamp,
-  //       address: locationState.address
-  //     }
-
-  //     if (distance && areaRadius && distance <= areaRadius) {
-  //       // locationState.areaControl = true
-  //       locationSliceDto.areaControl=true
-  //       dispatch(locationStore(locationSliceDto))
-
-  //       console.log("Cihaz belirlenen alan içinde.");
-  //       return false;
-  //     }
-  //     else {
-  //       console.log(`distance = ${distance} ----- area = ${areaRadius}`);
-  //       console.log("Cihaz belirlenen alanın dışında.");
-  //       if (barcodeState.data.trim() == BarcodeDataEnum.InputData.trim() || barcodeState.data.trim() === BarcodeDataEnum.OutData.trim()) {
-  //         locationSliceDto.areaControl=false
-  //         dispatch(locationStore(locationSliceDto))
-  //       }
-  //       // Toast.show({
-  //       //   text1: 'Barkod Okuma',
-  //       //   text2: 'Barkod okuma işlemi şirket dışında yapılamaz',
-  //       //   type: 'error',
-  //       // })
-  //       return true
-  //     }
-  //   }
-  //   else {
-  //     return false
-  //   }
-  // }
-
-  // useEffect(() => {
-  //   isWithinArea().then(response => {
-  //     setAreaControl(response)
-  //   });
-  // },
-  //   [locationState.coords.longitude, locationState.coords.latitude,barcodeState.storeDto.radius]
-  // )
 
   useEffect(() => {
     async function getCurrentLocation() {
@@ -216,7 +112,7 @@ export default function LocationComponent() {
               descriptionStyle={{ fontStyle: 'italic',color:'gray' }}
               style={{ marginBottom: 50 }}
               left={() => (
-                <Button mode='contained' onPress={() => { setReloadLocation(!reloadLocation) }}> Kounumu Tekrar Ara</Button>
+                <Button mode='contained' onPress={() => { setReloadLocation(!reloadLocation) }}> Konumu Tekrar Ara</Button>
               )}
             />
           </ScrollView>

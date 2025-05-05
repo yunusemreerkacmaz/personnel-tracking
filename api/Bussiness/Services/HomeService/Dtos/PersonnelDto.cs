@@ -16,6 +16,8 @@ namespace Bussiness.Services.HomeService.Dtos
         public int PageSize { get; set; }
         public int Total { get; set; }
         public LoginDto LoginDto { get; set; }
+        public int From { get; set; }
+        public int To { get; set; }
     }
     public class DataGridDto<T>
     {

@@ -1,39 +1,43 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { FlatList, Modal, View } from 'react-native'
 import { Card, IconButton, List, Searchbar, Button, TextInput, HelperText, Avatar, Text, Tooltip, Switch, Chip } from 'react-native-paper'
-import { initialFilterDto, initialStoreDto, StoreDto, StoreFilterDto, StoreLocationDto } from './Dtos/storeDto';
+import { HelperTextStoreDto, initialStoreDto, StoreDto, StoreLocationDto } from './Dtos/storeDto';
 import { GetStores, UpdateStore } from './Requests/storeRequest';
 import { ResponseStatus } from '../../ServiceResults/serviceResult';
 import Toast from 'react-native-toast-message';
 import TimePickerRangeModal from './timePickerRangeModal'
 import { StoreMapView } from './storeMapView';
 import { CrudEnum } from '../../Enums/ComponentEnum';
-import { initialTimeDto, TimeDto } from '../../Helpers/DataGrid/CrudTimeDto';
+import { HelperTextTimeDto, initialHelperTextTimeDto, initialTimeDto, TimeDto } from '../../Helpers/DataGrid/CrudTimeDto';
 
 export default function UpdateStoreComponent() {
   const [stores, setStores] = useState<StoreDto[]>([])
-  const [searchStoreQuery, setSearchStoreQuery] = React.useState('');
-  const [filter, setfilter] = useState<StoreFilterDto>(initialFilterDto)
+  const [search, setSearch] = React.useState('');
   const [visible, setVisible] = useState<"map" | "time" | "default">("default")
   const [selectedValue, setSelectedValue] = useState<StoreDto>(initialStoreDto)
   const [crudStatus, setCrudStatus] = useState<"update" | "delete" | "default">("default")
+  const [searchStores, setSearchStores] = useState<StoreDto[]>([])
 
   useEffect(() => {
     let getStoreAsync = async () => {
-      let response = await GetStores(filter);
+      let response = await GetStores();
       if (response?.responseStatus === ResponseStatus.IsSuccess) {
         setStores(response?.results)
+        setSearchStores(response.results)
       }
     }
     crudStatus === "default" && getStoreAsync()
     return () => {
       setCrudStatus("default")
     }
-  }, [filter.searchValue, crudStatus])
+  }, [crudStatus])
 
-  const handleFilterStore = () => {
-    setfilter(prev => ({ ...prev, searchValue: searchStoreQuery }))
+  const handleSearch = () => {
+    let filterStore = stores.filter(store => store.storeName.toLowerCase().trim().includes(search.toLowerCase().trim()))
+    setSearchStores(filterStore)
   }
+
+  const handleSearchClear = () => { setSearchStores(stores) }
 
   const handleVisible = useCallback(
     (value: 'map' | 'time' | 'default') => {
@@ -47,7 +51,7 @@ export default function UpdateStoreComponent() {
     <List.Item
       title={storeItemDto.storeName}
       key={storeItemDto.id}
-      titleStyle={{ paddingBottom: 2,color:'black' }}
+      titleStyle={{ paddingBottom: 2, color: 'black' }}
       style={{ paddingVertical: 0, paddingRight: 0, justifyContent: 'center', alignItems: 'flex-start' }} // Yüksekliği azaltmak için
       contentStyle={{ alignItems: 'flex-start', justifyContent: 'center' }}
       right={() => (
@@ -90,31 +94,32 @@ export default function UpdateStoreComponent() {
           </Tooltip>
         </View>
       )}
-      left={() => <Text style={{ marginTop: 8, fontWeight: 'bold',color:'black' }} variant="titleMedium">{index + 1 + ")"}</Text>}
+      left={() => <Text style={{ marginTop: 8, fontWeight: 'bold', color: 'black' }} variant="titleMedium">{index + 1 + ")"}</Text>}
     />
   );
   return (
     <View style={{ width: '95%', height: '96%' }}>
       <Searchbar
         placeholder="Kurum adı ara . . ."
-        onChangeText={setSearchStoreQuery}
-        value={searchStoreQuery}
+        onChangeText={setSearch}
+        value={search}
         style={{ marginVertical: 20 }}
-        onIconPress={handleFilterStore}
+        onIconPress={handleSearch}
+        onClearIconPress={handleSearchClear}
       />
       <Card style={{ backgroundColor: '#E7C5BC', maxHeight: '83%', elevation: 24 }}>
-        <Card.Title subtitleStyle={{ color:'gray' }} titleStyle={{ fontWeight: 'bold',color:'black' }} title="KURUM GÜNCELLEME ALANI" subtitle="Güncellenmesini istediğiniz kurumu seçin" />
+        <Card.Title subtitleStyle={{ color: 'gray' }} titleStyle={{ fontWeight: 'bold', color: 'black' }} title="KURUM GÜNCELLEME ALANI" subtitle="Güncellenmesini istediğiniz kurumu seçin" />
         <Card.Content style={{ height: '90%', backgroundColor: '#C5D6E9' }}>
           <FlatList
-            data={stores}
+            data={searchStores}
             style={{ paddingVertical: 2 }}
             renderItem={({ item, index }) => <StoreItem storeItemDto={item} index={index} key={index} />}
             keyExtractor={item => item.id.toString()}
           />
         </Card.Content>
       </Card>
-      {visible==="map" && <StoreMapView data={selectedValue} setVisible={setVisible} visible={visible} proccess={CrudEnum.UpdateStore} setCrudStatus={setCrudStatus} key={selectedValue.id} setFormHelperText={undefined} />}
-      {visible==="time" && <EditStoreTimeAndName visible={visible} setVisible={setVisible} selectedValue={selectedValue} setStores={setStores} setCrudStatus={setCrudStatus} />}
+      {visible === "map" && <StoreMapView data={selectedValue} setVisible={setVisible} visible={visible} proccess={CrudEnum.UpdateStore} setCrudStatus={setCrudStatus} key={selectedValue.id} setFormHelperText={undefined} />}
+      {visible === "time" && <EditStoreTimeAndName visible={visible} setVisible={setVisible} selectedValue={selectedValue} setStores={setStores} setCrudStatus={setCrudStatus} />}
     </View>
   )
 }
@@ -133,7 +138,8 @@ const EditStoreTimeAndName = (props: EditStoreTimeAndNameProps) => {
   const [storeTime, setStoreTime] = useState<TimeDto>(selectedValue.storeTime)
   const [reset, setReset] = useState<boolean>(false)
   const [storeLocation, setStoreLocation] = useState<StoreLocationDto>(selectedValue.storeLocation)
-  const [formHelperText, setFormHelperText] = useState({ storeName: false, startDate: false, endDate: false, latitude: false, longitude: false })
+  const [formHelperText, setFormHelperText] = useState<HelperTextStoreDto>({ storeName: false, latitude: false, longitude: false })
+  const [helperTextTimeDto, setHelperTextTimeDto] = useState<HelperTextTimeDto>(initialHelperTextTimeDto)
   const [isActive, setIsActive] = React.useState(false);
   const [infoMessage, setInfoMessage] = useState<boolean>(false)
 
@@ -175,7 +181,7 @@ const EditStoreTimeAndName = (props: EditStoreTimeAndNameProps) => {
       setFormHelperText(prev => ({ ...prev, endDate: true }))
     }
     else {
-      const updateDto: StoreDto = { ...selectedValue, storeName: storeName, storeTime: storeTime, storeLocation: storeLocation,isActive:isActive }
+      const updateDto: StoreDto = { ...selectedValue, storeName: storeName, storeTime: storeTime, storeLocation: storeLocation, isActive: isActive }
       const response = await UpdateStore(updateDto)
       if (response?.responseStatus === ResponseStatus.IsSuccess) {
         setStores(prev => prev.map(x => x.id === selectedValue.id ? { ...x, storeName: storeName, storeTime: storeTime } : x))
@@ -191,7 +197,7 @@ const EditStoreTimeAndName = (props: EditStoreTimeAndNameProps) => {
   }
 
   const saveDisabledStatus = () => {
-    if (storeName === selectedValue.storeName && storeTime.startDate === selectedValue.storeTime.startDate && storeTime.endDate === selectedValue.storeTime.endDate && selectedValue.isActive===isActive) {
+    if (storeName === selectedValue.storeName && storeTime.startDate === selectedValue.storeTime.startDate && storeTime.endDate === selectedValue.storeTime.endDate && selectedValue.isActive === isActive) {
       return true
     }
     else if (storeName === "" || storeTime.startDate === null || storeTime.endDate === null) {
@@ -232,9 +238,9 @@ const EditStoreTimeAndName = (props: EditStoreTimeAndNameProps) => {
     transparent={true}
     visible={visible === "time"}
     onRequestClose={handleVisible}
-    >
-    <View style={{ flex:1,justifyContent:'center',alignItems:'center' }}>
-      <Card elevation={5} style={{ justifyContent: 'center', margin: 10,height:400,width:'95%' }} >
+  >
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Card elevation={5} style={{ justifyContent: 'center', margin: 10, height: 400, width: '95%' }} >
         <Card.Title titleStyle={{ marginLeft: 20, fontWeight: 'bold' }} style={{ marginBottom: 20, overflow: 'visible' }} subtitleStyle={{ marginLeft: 20, opacity: 0.5, flexWrap: 'wrap', overflow: 'visible' }} title="Güncelleme Alanı" subtitle="Kurum adını ve Çalışma saatini Güncelle" left={LeftContent} right={() => (
           <IconButton
             icon="close"
@@ -247,10 +253,10 @@ const EditStoreTimeAndName = (props: EditStoreTimeAndNameProps) => {
               setStoreTime(selectedValue.storeTime)
               setStoreLocation(selectedValue.storeLocation)
               setFormHelperText({
-                endDate: false,
+                // endDate: false,
                 latitude: false,
                 longitude: false,
-                startDate: false,
+                // startDate: false,
                 storeName: false
               })
               setReset(false)
@@ -264,8 +270,8 @@ const EditStoreTimeAndName = (props: EditStoreTimeAndNameProps) => {
             onChangeText={handleStoreNameChange1}
           />
           {formHelperText.storeName && <HelperText type="error" visible={formHelperText.storeName}>Lütfen Kurumu Seçin</HelperText>}
-          {<TimePickerRangeModal setStoreTime={setStoreTime} storeTime={storeTime} reset={reset} formHelperText={formHelperText} setFormHelperText={setFormHelperText} />}
-          <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center',paddingVertical:0,marginVertical:0}}>
+          {<TimePickerRangeModal setStoreTime={setStoreTime} storeTime={storeTime} reset={reset} helperTextTimeDto={helperTextTimeDto} setHelperTextTimeDto={setHelperTextTimeDto} />}
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center', paddingVertical: 0, marginVertical: 0 }}>
             <Switch value={isActive} trackColor={{ true: "#79AB54", false: "#D5819A" }} thumbColor={isActive ? "green" : "red"} color={isActive ? "green" : "red"} onValueChange={onToggleSwitch} />
             <Text style={[{ fontWeight: 'bold', fontSize: 18 }, isActive ? { color: 'green' } : { color: 'red' }]}>{isActive ? "Aktif" : "Pasif"}</Text>
             <IconButton

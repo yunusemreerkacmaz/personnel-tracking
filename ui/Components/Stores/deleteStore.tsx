@@ -1,57 +1,65 @@
 import React, { useEffect, useState } from 'react'
 import { Alert, FlatList, View } from 'react-native'
-import { Button, Card, Checkbox, IconButton, List, Searchbar, Text, Tooltip } from 'react-native-paper'
-import { initialFilterDto, initialStoreLocationDto, StoreDto, StoreFilterDto } from './Dtos/storeDto';
+import { Button, Card, Checkbox, IconButton, List, Searchbar, Tooltip } from 'react-native-paper'
+import { initialStoreLocationDto, StoreDto } from './Dtos/storeDto';
 import { DeleteStores, GetStores } from './Requests/storeRequest';
 import { ResponseStatus } from '../../ServiceResults/serviceResult';
 import Toast from 'react-native-toast-message';
 import { initialTimeDto } from '../../Helpers/DataGrid/CrudTimeDto';
+import { ToastShowParamsCustomType } from '../../Helpers/Toast/ToastDto';
 
 export default function DeleteStore() {
-    const [searchQuery, setSearchQuery] = React.useState('');
+    const [search, setSearch] = React.useState('');
     const [stores, setStores] = useState<StoreDto[]>([])
+    const [searchStores, setSearchStores] = useState<StoreDto[]>([])
     const [checkeds, setCheckeds] = useState<StoreDto[]>([])
-    const [filter, setfilter] = useState<StoreFilterDto>(initialFilterDto)
     const [crudStatus, setCrudStatus] = useState<"update" | "delete" | "default">("default")
-    
+
     useEffect(() => {
         let getStoreAsync = async () => {
-            const response = await GetStores(filter);
+            const response = await GetStores();
             if (response?.responseStatus === ResponseStatus.IsSuccess) {
                 setStores(response?.results)
+                setSearchStores(response?.results)
             }
         }
         getStoreAsync()
-    }, [filter.searchValue, crudStatus])
-
+    }, [crudStatus])
 
     const handleDelete = async () => {
-        Alert.alert("Silme İşlemi Onaylama Ekranı", "Personeli silmek istediğinizden emin misiniz ?",
-            [
-                {
-                    text: "Sil",
-                    isPreferred: true,
-                    onPress: async () => {
-                        const response = await DeleteStores(checkeds)
-                        if (response?.responseStatus === ResponseStatus.IsSuccess) {
-                            Toast.show({ text1: response?.responseMessage, type: 'success' })
-                            setCrudStatus("delete")
-                        }
-                        else {
-                            Toast.show({ text1: response?.responseMessage, type: 'error' })
-                        }
-                    },
+        Toast.show({
+            text1: "Silme İşlemi Onaylama Ekranı",
+            text2: "Personeli silmek istediğinizden emin misiniz ?",
+            text1Style: { backgroundColor: 'yellow' },
+            type: 'customToast',
+            autoHide: false,  // ekranda duruyor
+            props: {
+                okButtonText: "Onayla",
+                cancelButtonText: "İptal",
+                onCancelPress: () => {
+                    Toast.hide()
+                    Toast.show({ text1: "Silme işlemi iptal edildi", type: 'error' })
                 },
-                {
-                    text: "İptal",
-                }
-            ],
-            { userInterfaceStyle: 'dark', }
-        )
+                onOkPress: async () => {
+                    const response = await DeleteStores(checkeds)
+                    if (response?.responseStatus === ResponseStatus.IsSuccess) {
+                        Toast.show({ text1: response?.responseMessage, type: 'success' })
+                        setCrudStatus("delete")
+                    }
+                    else {
+                        Toast.show({ text1: response?.responseMessage, type: 'error' })
+                    }
+                },
+            }
+        } as ToastShowParamsCustomType)
     }
 
-    const handleFilter = () => {
-        setfilter(prev => ({ ...prev, searchValue: searchQuery }))
+    const handleSearch = () => {
+        let filterStores = stores.filter(store => store.storeName.toLowerCase().trim().includes(search.toLowerCase().trim()))
+        setSearchStores(filterStores)
+    }
+    const handleSearchClear = () => {
+        setSearchStores(stores)
     }
 
     type ItemProps = { store: StoreDto, index: number };
@@ -59,7 +67,7 @@ export default function DeleteStore() {
         <List.Item
             title={store.storeName}
             key={store.id}
-            titleStyle={{ justifyContent: 'center', alignItems: 'center',color:'black' }}
+            titleStyle={{ justifyContent: 'center', alignItems: 'center', color: 'black' }}
             style={{ paddingVertical: 0, paddingRight: 0, justifyContent: 'center', alignItems: 'center' }} // Yüksekliği azaltmak için
             right={() => (
                 <Tooltip
@@ -102,8 +110,6 @@ export default function DeleteStore() {
                             }
                         }}
                     />
-                    {/* <Text variant='titleMedium' style={{ fontWeight: 'bold' }}>{index + 1 + ")"}</Text> */}
-
                 </View>
             }
         />
@@ -112,17 +118,18 @@ export default function DeleteStore() {
         <View style={{ width: '95%' }}>
             <Searchbar
                 placeholder="Kurum adı ara . . ."
-                onChangeText={setSearchQuery}
-                value={searchQuery}
+                onChangeText={setSearch}
+                value={search}
                 style={{ marginVertical: 20 }}
-                onIconPress={handleFilter}
+                onIconPress={handleSearch}
+                onClearIconPress={handleSearchClear}
             />
             <Card style={{ backgroundColor: '#E7C5BC', maxHeight: '78%', elevation: 24 }}>
-                <Card.Title subtitleStyle={{ color:'gray'  }} titleStyle={{ fontWeight: 'bold',color:'black'  }} title="KURUM SİLME ALANI" subtitle="Silinmesini istediğiniz kurumu seçin" />
+                <Card.Title subtitleStyle={{ color: 'gray' }} titleStyle={{ fontWeight: 'bold', color: 'black' }} title="KURUM SİLME ALANI" subtitle="Silinmesini istediğiniz kurumu seçin" />
                 <Card.Content style={{ height: '80.5%', backgroundColor: '#C5D6E9' }}>
                     {stores.length > 0 &&
                         <FlatList
-                            data={stores}
+                            data={searchStores}
                             style={{ paddingVertical: 0, paddingRight: 0 }}
                             renderItem={({ item, index }) => <Item store={item} index={index} />}
                             keyExtractor={item => item.id.toString()}

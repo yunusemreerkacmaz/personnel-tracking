@@ -28,6 +28,7 @@ namespace Bussiness.Services.UserService.Dtos
     }
     public class GetUserDto : AddUserDto
     {
+        public bool IsHaveBarcode { get; set; }
     }
     public class ForgottenPasswordDto 
     {
@@ -36,5 +37,11 @@ namespace Bussiness.Services.UserService.Dtos
         public string EmailConfirmNumber { get; set; }
         public string? UserName { get; set; }
         public string? Password { get; set; }
+    }
+
+    public class UserBarcodeLoginDto
+    {
+        public UserDto UserDto { get; set; }
+        public bool? IsApproval { get; set; }
     }
 }

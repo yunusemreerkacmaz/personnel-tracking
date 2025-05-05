@@ -11,6 +11,8 @@ namespace Bussiness.Services.DeviceService.Dtos
         public bool? TokenDeletionStatus { get; set; } // Frontend den tokeni silme durumu
         public UserDto? UserDto { get; set; }
         public bool IsDeleted { get; set; }
+        public string? DistinctDeviceModelName { get; set; } // sonradan girdiği cihazın modeli
+        public string? DistinctDeviceBrand { get; set; }    // sonradan girdiği cihazın markası
     }
 
     public class DeviceHashDto

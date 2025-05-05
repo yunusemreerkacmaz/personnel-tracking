@@ -25,7 +25,7 @@ export const barcodeSlice = createSlice({
         builder
             .addCase(barcodeReadStore.fulfilled, (state, action: PayloadAction<ServiceResult<BarcodeDto>>) => {
                 try {
-                    if (action.payload.result) {
+                    if (action.payload.result) {                        
                         const { data, id, locationDto, barcodeReadEnum, loginDto, storeDto } = action.payload.result
                         state.barcodeReadEnum = barcodeReadEnum
                         state.id = id
@@ -33,6 +33,7 @@ export const barcodeSlice = createSlice({
                         state.locationDto.longitude = locationDto.longitude
                         state.locationDto.areaControl = locationDto.areaControl
                         state.data = data
+                        state.loading = true
                         // state.deviceBrand = deviceBrand
                         // state.deviceModelName = deviceModelName
                         // state.deviceToken = deviceToken
@@ -52,7 +53,7 @@ export const barcodeSlice = createSlice({
                         state.loginDto.userDto.password = loginDto.userDto.password
                         state.loginDto.userDto.updateTime = loginDto.userDto.updateTime
                         state.loginDto.userDto.userName = loginDto.userDto.userName
-                        state.loginDto.userDto.phoneNumber=loginDto.userDto.phoneNumber
+                        state.loginDto.userDto.phoneNumber = loginDto.userDto.phoneNumber
                         state.storeDto.id = storeDto.id
                         state.storeDto.isActive = storeDto.isActive
                         state.storeDto.radius = storeDto.radius
@@ -75,6 +76,7 @@ export const barcodeSlice = createSlice({
                 state.locationDto.longitude = null
                 state.locationDto.areaControl = null
                 state.data = ""
+                state.loading = true
                 // state.deviceBrand = null
                 // state.deviceModelName = ""
                 // state.deviceToken = null
@@ -94,7 +96,7 @@ export const barcodeSlice = createSlice({
                 state.loginDto.userDto.password = initialLoginDto.userDto.password
                 state.loginDto.userDto.updateTime = initialLoginDto.userDto.updateTime
                 state.loginDto.userDto.userName = initialLoginDto.userDto.userName
-                state.loginDto.userDto.phoneNumber=initialLoginDto.userDto.phoneNumber
+                state.loginDto.userDto.phoneNumber = initialLoginDto.userDto.phoneNumber
 
                 state.storeDto.id = initialStoreDto.id
                 state.storeDto.isActive = initialStoreDto.isActive
@@ -137,7 +139,7 @@ export const barcodeSlice = createSlice({
                         state.loginDto.userDto.password = loginDto.userDto.password
                         state.loginDto.userDto.updateTime = loginDto.userDto.updateTime
                         state.loginDto.userDto.userName = loginDto.userDto.userName
-                        state.loginDto.userDto.phoneNumber=loginDto.userDto.phoneNumber
+                        state.loginDto.userDto.phoneNumber = loginDto.userDto.phoneNumber
 
                         state.storeDto.id = storeDto.id
                         state.storeDto.isActive = storeDto.isActive
@@ -178,7 +180,7 @@ export const barcodeSlice = createSlice({
                         state.loginDto.userDto.password = loginDto.userDto.password
                         state.loginDto.userDto.updateTime = loginDto.userDto.updateTime
                         state.loginDto.userDto.userName = loginDto.userDto.userName
-                        state.loginDto.userDto.phoneNumber=loginDto.userDto.phoneNumber
+                        state.loginDto.userDto.phoneNumber = loginDto.userDto.phoneNumber
 
                         state.storeDto.id = storeDto.id
                         state.storeDto.isActive = storeDto.isActive
@@ -218,7 +220,7 @@ export const barcodeSlice = createSlice({
                         state.loginDto.userDto.password = initialLoginDto.userDto.password
                         state.loginDto.userDto.updateTime = initialLoginDto.userDto.updateTime
                         state.loginDto.userDto.userName = initialLoginDto.userDto.userName
-                        state.loginDto.userDto.phoneNumber=initialLoginDto.userDto.phoneNumber
+                        state.loginDto.userDto.phoneNumber = initialLoginDto.userDto.phoneNumber
 
                         state.storeDto.id = initialStoreDto.id
                         state.storeDto.isActive = initialStoreDto.isActive
@@ -242,6 +244,7 @@ export const barcodeSlice = createSlice({
                 state.locationDto.longitude = null
                 state.locationDto.areaControl = null
                 state.data = ""
+                state.loading=true
                 // state.deviceBrand = null
                 // state.deviceModelName = ""
                 // state.deviceToken = null
@@ -262,7 +265,7 @@ export const barcodeSlice = createSlice({
                 state.loginDto.userDto.password = initialLoginDto.userDto.password
                 state.loginDto.userDto.updateTime = initialLoginDto.userDto.updateTime
                 state.loginDto.userDto.userName = initialLoginDto.userDto.userName
-                state.loginDto.userDto.phoneNumber=initialLoginDto.userDto.phoneNumber
+                state.loginDto.userDto.phoneNumber = initialLoginDto.userDto.phoneNumber
 
                 state.storeDto.id = initialStoreDto.id
                 state.storeDto.isActive = initialStoreDto.isActive

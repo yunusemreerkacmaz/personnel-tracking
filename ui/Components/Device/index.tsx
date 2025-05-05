@@ -20,7 +20,7 @@ export default function Index() {
             {<SegmentedButtons
                 value={value}
                 onValueChange={setValue}
-                style={{ width: '95%', marginTop: 10, borderWidth: 0 }}
+                style={{ width: '95%', marginVertical: 10, borderWidth: 0 }}
                 buttons={[
                     {
                         value: 'distinctDevice',

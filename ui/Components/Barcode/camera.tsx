@@ -2,12 +2,12 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { CameraView, CameraType, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
 import React from 'react';
 import { useState } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { AppDispatch, RootState } from '../../Store/store';
 import { useDispatch, useSelector } from 'react-redux';
 import { BarcodeDto } from './Dtos/barcodeDto';
 import { ResponseStatus, ServiceResult } from '../../ServiceResults/serviceResult';
-import Toast, { ToastShowParams } from 'react-native-toast-message';
+import Toast from 'react-native-toast-message';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { DrawerParamList } from '../../Navigator/navigator';
 import { Button, IconButton } from 'react-native-paper';
@@ -15,14 +15,9 @@ import { BarcodeReadEnum, BarcodeDataEnum } from '../../Enums/barcodeStatusEnum'
 import * as SecureStore from 'expo-secure-store';
 import { DeviceTokenEnum } from '../../Enums/JwtTokenEnum';
 import { barcodeReadStore } from './Requests/barcodeStore';
+import { ToastShowParamsCustomType } from '../../Helpers/Toast/ToastDto';
 
 type NavigationProps = DrawerNavigationProp<DrawerParamList>;
-export type ToastShowParamsCustomType = ToastShowParams & {
-  onOkPress: () => void     // burayı ben ekledim 
-  onCancelPress: () => void   // burayı ben ekledim
-  okButtonText: string
-  cancelButtonText: string
-};
 
 export default function BarcodeComponent() {
   const [facing, setFacing] = useState<CameraType>('back');
@@ -33,8 +28,6 @@ export default function BarcodeComponent() {
   const navigationCamera = useNavigation<NavigationProps>();
   const [isProcessing, setIsProcessing] = useState(false);
   const locationState = useSelector((state: RootState) => state.location)
-  const deviceInfoState = useSelector((state: RootState) => state.deviceInfo)
-  // const deviceState = useSelector((state: RootState) => state.device)
 
   useFocusEffect(
     React.useCallback(() => {
@@ -63,16 +56,12 @@ export default function BarcodeComponent() {
   const retryScannedStart = () => { setIsProcessing(false) }                                            // Camera taramasını tekrar başlat
 
   const handlebarcodeScanned = async ({ bounds, data }: BarcodeScanningResult) => {
-    // const deviceToken = await SecureStore.getItemAsync(DeviceJwtTokenEnum.key)
     if (data && permission.granted) {
       let barcode: BarcodeDto = {
         data: data,
         id: barcodeState.id != 0 ? barcodeState.id : 0,
         locationDto: { areaControl: locationState.areaControl, latitude: locationState.coords.latitude, longitude: locationState.coords.longitude },
         barcodeReadEnum: data.trim() == BarcodeDataEnum.InputData.trim() ? BarcodeReadEnum.Entreance : data.trim() == BarcodeDataEnum.OutData.trim() ? BarcodeReadEnum.Exit : BarcodeReadEnum.Default,
-        // deviceBrand: deviceInfoState.brand,
-        // deviceModelName: deviceInfoState.modelName ?? "",
-        // deviceToken: deviceToken,
         loginDto: loginState,
         storeDto: barcodeState.storeDto,
         loading: barcodeState.loading,
@@ -95,7 +84,7 @@ export default function BarcodeComponent() {
                   autoHide: false,  // ekranda duruyor
                   props: {
                     okButtonText: "Çıkış Yap",
-                    cancelButtonText: "İptal",
+                    cancelButtonText: "İptal Et",
                     onCancelPress: () => Toast.hide(),
                     onOkPress: async () => {
                       let newBarCodeDto: BarcodeDto = { ...barcode, data: "isUserOffShift" }

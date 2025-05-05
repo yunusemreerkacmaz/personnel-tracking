@@ -48,20 +48,20 @@ namespace Bussiness.Services.DeviceService
             {
                 deviceDto.IsDeleted = getDevice.IsDeleted;
 
-                if (getDevice.DeviceToken == deviceToken)
+                if (getDevice.DeviceToken == deviceToken)  // Kullanıcı başka bir cihazdan girmişse Cihaz Onaylama ekranına gönder
                 {
                     return new ServiceResult<DeviceDto> { ResponseStatus = ResponseStatus.IsSuccess };
                 }
                 else
                 {
-                    if (getDevice.DistinctDevice == null)
+                    if (getDevice.DistinctDevice == null)                               // Farklı bir cihazdan giriş yaptı
                     {
                         getDevice.DistinctDeviceBrand = deviceDto.DeviceBrand;
                         getDevice.DistinctDeviceModelName = deviceDto.DeviceModelName;
                         getDevice.DistinctDevice = true;
                         var update = _deviceDal.UpdateAsync(getDevice);
                     }
-                    if (getDevice.DistinctDevice == false)
+                    if (getDevice.DistinctDevice == false)  // // Admin Cihaz onayı vermemişse
                     {
                         return new ServiceResult<DeviceDto> { ResponseStatus = ResponseStatus.IsWarning, ResponseMessage = "Yöneticiniz bu cihaz ile işlem yapabilmenizi engelledi." };
 
@@ -160,7 +160,6 @@ namespace Bussiness.Services.DeviceService
                             return new ServiceResult<DeviceDto> { ResponseStatus = ResponseStatus.IsError };
                         }
                     }
-
                 }
                 else
                 {
@@ -188,10 +187,7 @@ namespace Bussiness.Services.DeviceService
         }
         public async Task<ServiceResult<DeviceDto>> CreateDeviceService(DeviceDto deviceDto)
         {
-
-
             var headers = _httpContextAccessor.HttpContext?.Response?.Headers;  // Respons'a ait header
-
             string? generateDeviceToken = null;
             if (deviceDto != null && deviceDto.UserDto != null)
             {
@@ -225,7 +221,7 @@ namespace Bussiness.Services.DeviceService
                     CreateTime = DateTime.Now,
                     DeviceBrand = deviceDto?.DeviceBrand,
                     DeviceModelName = deviceDto?.DeviceModelName,
-                    DistinctDevice = false,
+                    DistinctDevice = null,
                 });
                 if (added.Id > 0)
                 {
@@ -257,7 +253,18 @@ namespace Bussiness.Services.DeviceService
         }
         public async Task<ServiceResult<DeviceDto>> GetDistinctDevicesService()
         {
-            var userQuery = _userDal.GetAllQueryAble(x => !x.IsDeleted);
+            var headers = _httpContextAccessor.HttpContext?.Request?.Headers;
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+            var loginDto = new TokenDecoder(environment).DecodeToken(headers.Authorization);
+
+            var getUser = await _userDal.GetAsync(user =>
+            loginDto.UserDto != null &&
+            loginDto.RoleDto != null &&
+            loginDto.UserDto.UserName == user.UserName &&
+            loginDto.UserDto.Email == user.Email &&
+            loginDto.RoleDto.RoleName.ToLower().Trim() == user.RoleName.ToLower().Trim());
+
+            var userQuery = _userDal.GetAllQueryAble(x => !x.IsDeleted).Where(x => getUser.RoleId == 1 || getUser.StoreId == x.StoreId && x.Id != getUser.Id && x.RoleId != 1); ;
             var deviceQuery = _deviceDal.GetAllQueryAble(x => x.DistinctDevice == true && !x.IsDeleted);
 
             if (userQuery.Any() && deviceQuery.Any())
@@ -280,7 +287,12 @@ namespace Bussiness.Services.DeviceService
                         Email = user.Email,
                         Gender = user.Gender,
                         UpdateTime = user.UpdateTime,
-                    }
+                        PhoneNumber=user.PhoneNumber,
+                    },
+                    DeviceBrand=device.DeviceBrand,
+                    DeviceModelName=device.DeviceModelName,
+                    DistinctDeviceBrand = device.DistinctDeviceBrand,
+                    DistinctDeviceModelName = device.DistinctDeviceModelName
                 });
 
                 var join = await joinQuery.ToListAsync();
@@ -307,13 +319,11 @@ namespace Bussiness.Services.DeviceService
             {
                 user = await _userDal.GetAsync(x => x.Id == deviceDto.UserDto.Id);
                 device = await _deviceDal.GetAsync(x => x.Id == deviceDto.Id);
-
             }
             if (device != null && deviceDto.TokenDeletionStatus == true && device.DistinctDeviceBrand != null && device.DistinctDeviceModelName != null && user != null)            // cihaz varsa ve cihaz değişimi onaylanmışsa
             {
                 device.DeviceModelName = device.DistinctDeviceModelName;
                 device.DeviceBrand = device.DistinctDeviceBrand;
-
                 var deviceHashDto = new DeviceHashDto
                 {
                     UserId = user.Id,
@@ -326,7 +336,6 @@ namespace Bussiness.Services.DeviceService
                 var generateDeviceToken = CreateHS256(json, user.Id.ToString());
 
                 device.DeviceToken = generateDeviceToken;
-
                 device.DistinctDevice = null;
                 device.DeviceToken = generateDeviceToken;
             }
@@ -344,7 +353,7 @@ namespace Bussiness.Services.DeviceService
             }
             if (update && deviceDto.TokenDeletionStatus == true)
             {
-                return new ServiceResult<DeviceDto> { ResponseStatus = ResponseStatus.IsSuccess, ResponseMessage = "Kullanıcının cihaz değişimi onaylnadı.Kullanıcı cihazı aktif kullanabilir" };
+                return new ServiceResult<DeviceDto> { ResponseStatus = ResponseStatus.IsSuccess, ResponseMessage = "Kullanıcının cihaz değişimi onaylandı.Kullanıcı cihazı aktif kullanabilir" };
             }
             else if (update && deviceDto.TokenDeletionStatus == false)
             {
@@ -391,14 +400,10 @@ namespace Bussiness.Services.DeviceService
             loginDto.UserDto.Email == user.Email &&
             loginDto.RoleDto.RoleName.ToLower().Trim() == user.RoleName.ToLower().Trim());
 
-            var userQuery = _userDal.GetAllQueryAble(x => !x.IsDeleted && x.StoreId == getUser.StoreId);
-            var deviceQuery = _deviceDal.GetAllQueryAble(x => !x.IsDeleted).Select(x => x.UserId);
+            var userQuery = _userDal.GetAllQueryAble(x => !x.IsDeleted).Where(x => getUser.RoleId == 1 || getUser.StoreId == x.StoreId && x.Id != getUser.Id && x.RoleId != 1); // Admin ise tüm verileri getir değilse mağazasına bak ve kendi verisini getirme ayrıca admin ile aynı olan yerdeki kullancıya admini gösterme
+            var deviceQuery = _deviceDal.GetAllQueryAble(x => !x.IsDeleted).Select(x => x.UserId);          // cihazı olan ve aktif olan cihazların kullanıcı idlerini getir 
+            var query = userQuery.Where(user => deviceQuery.Any(deviceUserId => deviceUserId == user.Id));  // cihazı olan kullancıların bilgilerini getir
 
-            IQueryable<User>? query = null;
-            if (deviceQuery.Any() && userQuery.Any())
-            {
-                query = userQuery.Where(user => deviceQuery.Any(device => device == user.Id));
-            }
             if (query != null && query.Any())
             {
                 var users = await query.Select(user => new UserDto

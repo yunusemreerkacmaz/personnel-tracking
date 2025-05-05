@@ -51,6 +51,7 @@ namespace personnel_tracking_api.Controllers
             return true;
         }
         [HttpGet("ListofAbsentees")]
+        [AllowAnonymous]                // Herkes buraya erişebilmeli
         public async Task<ServiceResult<UserDto>> ListofAbsentees()
         {
             var user = await _loginService.ListofAbsentees();

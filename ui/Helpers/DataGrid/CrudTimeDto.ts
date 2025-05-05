@@ -15,3 +15,12 @@ export const initialTimeDto: TimeDto = {
     startDate: null,
     endDate: null
 }
+
+export interface HelperTextTimeDto {
+    startDate?: boolean
+    endDate?: boolean
+}
+export const initialHelperTextTimeDto:HelperTextTimeDto={
+    startDate: false,
+    endDate: false
+}

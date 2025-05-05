@@ -9,25 +9,25 @@ import { ResponseStatus } from '../../ServiceResults/serviceResult';
 import Toast from 'react-native-toast-message';
 import { useFocusEffect } from '@react-navigation/native';
 import { CrudEnum } from '../../Enums/ComponentEnum';
-import { initialTimeDto, TimeDto } from '../../Helpers/DataGrid/CrudTimeDto';
+import { HelperTextTimeDto, initialHelperTextTimeDto, initialTimeDto, TimeDto } from '../../Helpers/DataGrid/CrudTimeDto';
 
 export default function AddStore() {
     const [data, setData] = useState<StoreDto>(initialStoreDto)
     const [storeTime, setStoreTime] = useState<TimeDto>(initialTimeDto)
     const [reset, setReset] = useState<boolean>(false)
     const [visible, setVisible] = useState<"map" | "time" | "default">("default")
-    const [formHelperText, setFormHelperText] = useState({ storeName: false, startDate: false, endDate: false, latitude: false, longitude: false })
+    const [helperTextTimeDto, setHelperTextTimeDto] = useState<HelperTextTimeDto>(initialHelperTextTimeDto)
+    const [formHelperText, setFormHelperText] = useState({ storeName: false, latitude: false, longitude: false })
 
     useFocusEffect(
         useCallback(
             () => {
                 setFormHelperText({
-                    endDate: false,
                     latitude: false,
                     longitude: false,
-                    startDate: false,
                     storeName: false
                 })
+                setHelperTextTimeDto(initialHelperTextTimeDto)
             },
             [reset],
         )
@@ -106,7 +106,7 @@ export default function AddStore() {
                     {formHelperText.storeName && <HelperText type="error" visible={formHelperText.storeName}>Lütfen Kurumu Seçin</HelperText>}
                     <Chip textStyle={{ color: 'red' }} style={{ backgroundColor: '#ACC8E5', marginTop: 15 }} icon="map-marker-radius" onPress={handleShowMap}>{visible === "map" ? "Kurum konumunu kapat" : "Kurum konumu ekle"}</Chip>
                     {formHelperText.latitude && formHelperText.longitude && <HelperText type="error" visible={formHelperText.latitude && formHelperText.longitude}>Lütfen Kurumu Seçin</HelperText>}
-                    <TimePickerRangeModal storeTime={storeTime} setStoreTime={setStoreTime} reset={reset} formHelperText={formHelperText} setFormHelperText={setFormHelperText} />
+                    <TimePickerRangeModal storeTime={storeTime} setStoreTime={setStoreTime} reset={reset} helperTextTimeDto={helperTextTimeDto} setHelperTextTimeDto={setHelperTextTimeDto} />
                 </Card.Content>
                 <Card.Actions>
                     <Button disabled={handleResetDisabled()} onPress={handleReset}>Sıfırla</Button>

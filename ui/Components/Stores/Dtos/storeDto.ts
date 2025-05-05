@@ -49,3 +49,9 @@ export interface StoreFilterDto{
 export const initialFilterDto:StoreFilterDto={
     searchValue: ""
 }
+
+export type HelperTextStoreDto={
+    storeName:boolean
+    latitude:boolean
+    longitude:boolean
+  }

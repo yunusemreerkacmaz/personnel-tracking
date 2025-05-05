@@ -1,11 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios, { AxiosError, AxiosHeaders } from "axios";
+import axios, { AxiosError } from "axios";
 import Toast from "react-native-toast-message";
 import { LoginJwtTokenEnum } from "../Enums/JwtTokenEnum";
-import { Alert } from "react-native";
-import Constants from "expo-constants";
 import { getEnvironmentAndBaseUrl } from "../env";
-import * as Device from 'expo-device';
 
 interface ErrorResponse {
     message?: string; // `message` opsiyonel olabilir
