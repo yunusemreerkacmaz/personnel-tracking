@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react'
-import { View, Text, FlatList } from 'react-native'
-import { Button, Card, List, Searchbar } from 'react-native-paper'
+import { View, FlatList } from 'react-native'
+import { Button, Card, Chip, List, Searchbar,Text } from 'react-native-paper'
 import Toast from 'react-native-toast-message'
 import { ToastShowParamsCustomType } from '../../../Helpers/Toast/ToastDto'
 import { UserBarcodeLoginDto } from './Dtos/userBarcodeLogin'
@@ -51,14 +51,12 @@ export default function UserLoginComponent() {
   const handleClearSearch = () => { setSearchUsers(users) }
 
   return (
-    <View style={{ width: '95%', height: '100%' }}>
-      <Card style={{ maxHeight: '90%', elevation: 24, backgroundColor: '#E7C5BC' }}>
+      <Card style={{ flex:1, elevation: 24, backgroundColor: '#E7C5BC' }}>
         <Card.Title subtitleStyle={{ color: 'gray' }} titleStyle={{ fontWeight: 'bold', color: 'black' }} title="KULLANICI GİRİŞİ ONAYLAMA ALANI" subtitle="Girişinin onaylanmasını istediğiniz kişiyi seçin" />
-        <Card.Content style={{ height: '90%', backgroundColor: '#C5D6E9' }}>
           {
             searchUsers?.length === 0 ?
-              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <Text>Gösterilecek Veri yok</Text>
+              <View style={{ height:'100%',justifyContent: 'center', alignItems: 'center' }}>
+                <Chip icon="information" >Gösterilecek Veri Yok</Chip>
               </View> :
               <FlatList
                 ListHeaderComponent={
@@ -72,14 +70,12 @@ export default function UserLoginComponent() {
                   />
                 }
                 data={searchUsers}
-                style={{ paddingVertical: 2 }}
+                style={{paddingVertical: 2,backgroundColor: '#C5D6E9', padding: 10,borderRadius:10  }}
                 renderItem={({ item, index }) => <UserLoginItem userDto={item} index={index + 1} setCrudStatus={setCrudStatus} crudStatus={crudStatus} key={item.userDto.id}/>}
                 keyExtractor={item => item.userDto.id.toString()}
               />
           }
-        </Card.Content>
       </Card>
-    </View>
   )
 }
 type UserBarcodeLoginProps = { userDto: UserBarcodeLoginDto, index: number, crudStatus: boolean, setCrudStatus: React.Dispatch<React.SetStateAction<boolean>> }

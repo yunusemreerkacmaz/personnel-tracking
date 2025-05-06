@@ -7,7 +7,7 @@ import Toast from 'react-native-toast-message';
 import { DeleteDevice, getDevices } from './Requests/deviceInfoStore';
 import { UserDto } from '../Admin/AddUser/Dtos/userDto';
 
-export default function ChangeDeviceToken() {
+export default function ChangeDeviceToken() { // Cihaz Sil
     const [search, setSearch] = React.useState('');
     const [deviceUsers, setDeviceUsers] = useState<UserDto[]>([])
     const [approvedStatus, setApprovedStatus] = useState<boolean>(false)
@@ -41,10 +41,8 @@ export default function ChangeDeviceToken() {
     )
 
     return (
-        <View style={{ width: '95%', height: '100%'}}>
-            <Card style={{ backgroundColor: '#E7C5BC', maxHeight: '90%', elevation: 24 }}>
+            <Card style={{ flex:1,backgroundColor: '#E7C5BC', elevation: 24,margin:10,marginTop:0 }}>
                 <Card.Title subtitleStyle={{ color: 'gray' }} titleStyle={{ fontWeight: 'bold', color: 'black' }} title="CİHAZ SİLME ALANI" subtitle="Cihazını silmek istediğiniz kişiyi seçin" />
-                <Card.Content style={{ height: '90%', backgroundColor: '#C5D6E9',paddingBottom:50}}>
                     {
                         deviceUsers?.length === 0 ?
                             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -56,20 +54,18 @@ export default function ChangeDeviceToken() {
                                         placeholder="Cihaz adı ara . . ."
                                         onChangeText={setSearch}
                                         value={search}
-                                        style={{ marginVertical: 20 }}
+                                        style={{ marginVertical: 5 }}
                                         onIconPress={handleSearch}
                                         onClearIconPress={handleSearchClear}
                                     />
                                 }
                                 data={searchUsers}
-                                style={{ paddingVertical: 2 }}
+                                style={{ paddingVertical: 2, backgroundColor: '#C5D6E9', padding: 10  }}
                                 renderItem={({ item, index }) => <DeviceItem userDto={item} index={index + 1} setApprovedStatus={setApprovedStatus} approvedStatus={approvedStatus} />}
                                 keyExtractor={item => item.id.toString()}
                             />
                     }
-                </Card.Content>
             </Card>
-        </View>
     )
 }
 type DeviceItemProps = { userDto: UserDto, index: number, approvedStatus: boolean, setApprovedStatus: React.Dispatch<React.SetStateAction<boolean>> }

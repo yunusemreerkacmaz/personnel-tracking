@@ -10,8 +10,9 @@ import Toast from 'react-native-toast-message';
 import { useFocusEffect } from '@react-navigation/native';
 import { CrudEnum } from '../../Enums/ComponentEnum';
 import { HelperTextTimeDto, initialHelperTextTimeDto, initialTimeDto, TimeDto } from '../../Helpers/DataGrid/CrudTimeDto';
+import { ScrollView } from 'react-native-gesture-handler';
 
-export default function AddStore() {
+export default function AddStoreComponent() {
     const [data, setData] = useState<StoreDto>(initialStoreDto)
     const [storeTime, setStoreTime] = useState<TimeDto>(initialTimeDto)
     const [reset, setReset] = useState<boolean>(false)
@@ -34,26 +35,24 @@ export default function AddStore() {
     )
 
     const saveDisabledStatus = () => {
-        if (data.storeLocation.latitude!==initialStoreDto.storeLocation.latitude  && data.storeLocation.longitude!=initialStoreDto.storeLocation.longitude  && data.storeName && storeTime.startDate && storeTime.endDate) {
+        if (data.storeLocation.latitude !== initialStoreDto.storeLocation.latitude && data.storeLocation.longitude != initialStoreDto.storeLocation.longitude && data.storeName && storeTime.startDate && storeTime.endDate) {
             return false
         }
         else {
             return true
         }
     }
-   const handleResetDisabled =  () => {
-        if (data.storeName || data.storeLocation.latitude!==initialStoreDto.storeLocation.latitude || data.storeLocation.longitude!=initialStoreDto.storeLocation.longitude || storeTime.startDate || storeTime.endDate) {
+    const handleResetDisabled = () => {
+        if (data.storeName || data.storeLocation.latitude !== initialStoreDto.storeLocation.latitude || data.storeLocation.longitude != initialStoreDto.storeLocation.longitude || storeTime.startDate || storeTime.endDate) {
             return false
         }
-        else{
+        else {
             return true
         }
     }
 
     const handlePress = async () => {
-        let addDataDto:StoreDto={...data,storeTime:storeTime,}
-        console.log("AddDataDto",addDataDto);
-        
+        let addDataDto: StoreDto = { ...data, storeTime: storeTime, }
         const response = await AddNewStore(addDataDto)
         if (response?.responseStatus === ResponseStatus.IsSuccess) {
             setData(initialStoreDto)
@@ -61,8 +60,7 @@ export default function AddStore() {
                 text1: response.responseMessage,
                 type: 'success'
             })
-        setReset(false)
-
+            setReset(false)
         }
         else {
             Toast.show({
@@ -71,24 +69,22 @@ export default function AddStore() {
             })
         }
     }
-    
+
     const handleReset = () => {
         setData(initialStoreDto)
         setStoreTime(initialTimeDto)
         setReset(true)
-        setFormHelperText(prev=>({...prev,latitude:false,longitude:false,endDate:false,startDate:false,storeName:false}))
+        setFormHelperText(prev => ({ ...prev, latitude: false, longitude: false, endDate: false, startDate: false, storeName: false }))
     }
 
-    const handleShowMap = () => {
-        setVisible("map")
-    }
+    const handleShowMap = () => { setVisible("map") }
 
     const LeftContent = (props: any) => <Avatar.Icon size={55} icon="store-marker" />
     return (
-        <View style={{ width: '100%' }}>
-            <Card elevation={5} style={{ justifyContent: 'center', margin: 10 }}>
+        <ScrollView style={{ width: '100%' }}>
+            <Card elevation={5} style={{ flex: 1, justifyContent: 'center', margin: 10 }}>
                 <Card.Title titleStyle={{ marginLeft: 20, fontWeight: 'bold' }} style={{ marginBottom: 20 }} subtitleStyle={{ marginLeft: 20, opacity: 0.5 }} title="Lokasyon Ekle" subtitle="Kurum Adı ve Lokasyon Ekleme Alanı" left={LeftContent} />
-                <Card.Content>
+                <Card.Content style={{ flex: 1 }}>
                     <TextInput
                         label="Kurum Adı"
                         value={data.storeName}
@@ -108,14 +104,14 @@ export default function AddStore() {
                     {formHelperText.latitude && formHelperText.longitude && <HelperText type="error" visible={formHelperText.latitude && formHelperText.longitude}>Lütfen Kurumu Seçin</HelperText>}
                     <TimePickerRangeModal storeTime={storeTime} setStoreTime={setStoreTime} reset={reset} helperTextTimeDto={helperTextTimeDto} setHelperTextTimeDto={setHelperTextTimeDto} />
                 </Card.Content>
-                <Card.Actions>
+                <Card.Actions style={{ flex: 1 }}>
                     <Button disabled={handleResetDisabled()} onPress={handleReset}>Sıfırla</Button>
                     <Button buttonColor='green' onPress={handlePress} disabled={saveDisabledStatus()}>Kaydet</Button>
                 </Card.Actions>
             </Card>
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                {visible==="map" && <StoreMapView visible={visible} setVisible={setVisible} data={data} proccess={CrudEnum.AddStore} key={data.id} setFormHelperText={setFormHelperText}  setData={setData} />}
+                {visible === "map" && <StoreMapView visible={visible} setVisible={setVisible} data={data} proccess={CrudEnum.AddStore} key={data.id} setFormHelperText={setFormHelperText} setData={setData} />}
             </View>
-        </View>
+        </ScrollView>
     )
 }

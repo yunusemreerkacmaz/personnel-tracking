@@ -18,24 +18,24 @@ export default function DeleteUserComponent() {
 
     useFocusEffect(
         useCallback(
-          () => {
-            const getUsers = async () => {
-                let temp = true
-                if (temp) {
-                    const responseUsers = await GetUsers()
-                    if (responseUsers?.responseStatus === ResponseStatus.IsSuccess) {
-                        setUsers(responseUsers?.results)
-                        setSearchUsers(responseUsers?.results)
-                        setCheckedsUser([])
+            () => {
+                const getUsers = async () => {
+                    let temp = true
+                    if (temp) {
+                        const responseUsers = await GetUsers()
+                        if (responseUsers?.responseStatus === ResponseStatus.IsSuccess) {
+                            setUsers(responseUsers?.results)
+                            setSearchUsers(responseUsers?.results)
+                            setCheckedsUser([])
+                        }
+                    }
+                    return () => {
+                        temp = false
                     }
                 }
-                return () => {
-                    temp = false
-                }
-            }
-            getUsers();
-          },
-          [],
+                getUsers();
+            },
+            [],
         )
     )
 
@@ -49,69 +49,69 @@ export default function DeleteUserComponent() {
     }
 
     return (
-        <Card elevation={5} style={{ minWidth: '95%', marginTop: 20, marginHorizontal: 10, height: '90%' }}>
+        <Card elevation={5} style={{ flex: 1, margin: 10, }}>
             <Card.Title subtitleStyle={{ opacity: 0.5 }} titleStyle={{ fontWeight: 'bold' }} title="KULLANICIYI SİL" subtitle="Silinmesini istediğiniz kullanıcıyı seçin" left={DeleteRoleLeftContent} />
-            <Divider  />
-            <Card.Content style={{ justifyContent: 'center', alignItems: 'center',flex:1}}>
-                <Searchbar
-                    placeholder="Kullanıcı Ara..."
-                    placeholderTextColor={"gray"}
-                    onChangeText={setSearchUserValue}
-                    value={searchUserValue}
-                    onIconPress={async () => { await handleSearch() }}
-                    onClearIconPress={async () => { await handleClear() }}
-                    style={{ marginBottom: 10, width: '95%', justifyContent: 'center', borderWidth: 1, borderColor: '#ACC8E5',marginTop:10 }}
-                    showDivider
-                />
-                <FlatList
-                    data={searchUsers}
-                    renderItem={({ item, index }) => <UserItem key={item.id.toString()} userDto={item} setCheckedsUser={setCheckedsUser} checkedsUser={checkedsUser} />}
-                    keyExtractor={item => item.id.toString()}
-                />
-            </Card.Content>
-            <Card.Actions style={{ justifyContent:'center',alignItems:'center',backgroundColor:"#E0E2E4" }}>
-                <View style={{flex:1,justifyContent:'center', alignItems:'center'}}>
-                <TouchableOpacity>
-                    <Button buttonColor='red' mode='contained'
-                        disabled={checkedsUser.length === 0}
-                        onPress={async () => {
-                            let filteredRoles = users.filter(x => checkedsUser.some(i => i.id == x.id))
-                            const response = await DeleteUsers(filteredRoles)
-                            if (response?.responseStatus === ResponseStatus.IsSuccess) {
-                                Toast.show({
-                                    text1: response?.responseMessage,
-                                    type: 'success'
-                                })
-                            }
-                            else if(response?.responseStatus === ResponseStatus.IsWarning){
-                                Toast.show({
-                                    text1:"Silme işleminde hata oluştu",
-                                    text2: response?.responseMessage,
-                                    type: 'info'
-                                })
-                            }
-                            else {
-                                Toast.show({
-                                    text1:"Silme işleminde hata oluştu",
-                                    text2: response?.responseMessage,
-                                    type: 'error'
-                                })
-                            }
-                            let responseUsers=await GetUsers()
-                            if (responseUsers?.responseStatus===ResponseStatus.IsSuccess) {
-                                setSearchUsers(responseUsers.results)
-                                setUsers(responseUsers.results)
-                                setCheckedsUser([])
-                            }
-                            else{
-                                Toast.show({
-                                    text1:"Personel listelemesi hatası",
-                                    text2:"Güncel personeller için ekranlar arasında geçiş yapın",
-                                    type: 'error'
-                                }) 
-                            }
-                        }}>{checkedsUser.length < 2 ? "Sil" : "Seçilenleri Sil"}</Button>
-                </TouchableOpacity>
+            <Divider />
+            <FlatList
+                ListHeaderComponent={
+                    <Searchbar
+                        placeholder="Kullanıcı Ara..."
+                        placeholderTextColor={"gray"}
+                        onChangeText={setSearchUserValue}
+                        value={searchUserValue}
+                        onIconPress={async () => { await handleSearch() }}
+                        onClearIconPress={async () => { await handleClear() }}
+                        style={{ margin: 10, justifyContent: 'center', borderWidth: 1, borderColor: '#ACC8E5', marginTop: 10 }}
+                        showDivider
+                    />
+                }
+                data={searchUsers}
+                renderItem={({ item, index }) => <UserItem key={item.id.toString()} userDto={item} setCheckedsUser={setCheckedsUser} checkedsUser={checkedsUser} />}
+                keyExtractor={item => item.id.toString()}
+            />
+            <Card.Actions style={{ justifyContent: 'center', alignItems: 'center', backgroundColor: "#E0E2E4", borderRadius: 10 }}>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <TouchableOpacity>
+                        <Button buttonColor='red' mode='contained'
+                            disabled={checkedsUser.length === 0}
+                            onPress={async () => {
+                                let filteredRoles = users.filter(x => checkedsUser.some(i => i.id == x.id))
+                                const response = await DeleteUsers(filteredRoles)
+                                if (response?.responseStatus === ResponseStatus.IsSuccess) {
+                                    Toast.show({
+                                        text1: response?.responseMessage,
+                                        type: 'success'
+                                    })
+                                }
+                                else if (response?.responseStatus === ResponseStatus.IsWarning) {
+                                    Toast.show({
+                                        text1: "Silme işleminde hata oluştu",
+                                        text2: response?.responseMessage,
+                                        type: 'info'
+                                    })
+                                }
+                                else {
+                                    Toast.show({
+                                        text1: "Silme işleminde hata oluştu",
+                                        text2: response?.responseMessage,
+                                        type: 'error'
+                                    })
+                                }
+                                let responseUsers = await GetUsers()
+                                if (responseUsers?.responseStatus === ResponseStatus.IsSuccess) {
+                                    setSearchUsers(responseUsers.results)
+                                    setUsers(responseUsers.results)
+                                    setCheckedsUser([])
+                                }
+                                else {
+                                    Toast.show({
+                                        text1: "Personel listelemesi hatası",
+                                        text2: "Güncel personeller için ekranlar arasında geçiş yapın",
+                                        type: 'error'
+                                    })
+                                }
+                            }}>{checkedsUser.length < 2 ? "Sil" : "Seçilenleri Sil"}</Button>
+                    </TouchableOpacity>
                 </View>
             </Card.Actions>
         </Card>
@@ -125,26 +125,25 @@ const UserItem: React.FC<UserItemProps> = ({ userDto, setCheckedsUser, checkedsU
             title={`${userDto.firstName} ${userDto.lastName}`}
             key={userDto.id}
             titleStyle={{ justifyContent: 'center' }}
-            style={{flex:1,justifyContent:'center',alignItems:'center'}} // Yüksekliği azaltmak için
+            style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} // Yüksekliği azaltmak için
             right={() => (
                 <Tooltip
                     enterTouchDelay={10}
                     leaveTouchDelay={2000}
-                    title={userDto.isHaveBarcode ? "Kullanıcının sistemde barkodu mevcut" :  userDto.isActive ?
+                    title={userDto.isHaveBarcode ? "Kullanıcının sistemde barkodu mevcut" : userDto.isActive ?
                         "Kullanıcı aktif, silmek için pasif hale getirin." :
                         "Kullanıcı sistemde yok, silinebilir"}>
-                        <IconButton
-                            icon="information-outline"
-                            selected
-                            iconColor={userDto.isHaveBarcode ? "#F5C04F" : userDto.isActive ? 'red' : 'green'}
-                            size={24}
-                            style={{ justifyContent:'center',alignItems:'center' }}
-                            />
+                    <IconButton
+                        icon="information-outline"
+                        selected
+                        iconColor={userDto.isHaveBarcode ? "#F5C04F" : userDto.isActive ? 'red' : 'green'}
+                        size={24}
+                        style={{ justifyContent: 'center', alignItems: 'center' }}
+                    />
                 </Tooltip>
             )}
-            left={() =>
-                {
-                  return  <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+            left={() => {
+                return <View style={{ justifyContent: 'center', alignItems: 'center' }}>
                     <Checkbox
                         status={checkedsUser.find(x => x.id == userDto.id)?.checkStatus ? 'checked' : 'unchecked'}
                         color={userDto.isHaveBarcode ? "#F5C04F" : userDto.isActive ? 'red' : 'green'}
@@ -162,7 +161,7 @@ const UserItem: React.FC<UserItemProps> = ({ userDto, setCheckedsUser, checkedsU
                         }}
                     />
                 </View>
-                }
+            }
             }
         />
         <Divider />

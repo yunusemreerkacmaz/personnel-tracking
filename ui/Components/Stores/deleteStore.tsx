@@ -8,7 +8,7 @@ import Toast from 'react-native-toast-message';
 import { initialTimeDto } from '../../Helpers/DataGrid/CrudTimeDto';
 import { ToastShowParamsCustomType } from '../../Helpers/Toast/ToastDto';
 
-export default function DeleteStore() {
+export default function DeleteStoreComponent() {
     const [search, setSearch] = React.useState('');
     const [stores, setStores] = useState<StoreDto[]>([])
     const [searchStores, setSearchStores] = useState<StoreDto[]>([])
@@ -115,33 +115,32 @@ export default function DeleteStore() {
         />
     );
     return (
-        <View style={{ width: '95%' }}>
-            <Searchbar
-                placeholder="Kurum adı ara . . ."
-                onChangeText={setSearch}
-                value={search}
-                style={{ marginVertical: 20 }}
-                onIconPress={handleSearch}
-                onClearIconPress={handleSearchClear}
-            />
-            <Card style={{ backgroundColor: '#E7C5BC', maxHeight: '78%', elevation: 24 }}>
-                <Card.Title subtitleStyle={{ color: 'gray' }} titleStyle={{ fontWeight: 'bold', color: 'black' }} title="KURUM SİLME ALANI" subtitle="Silinmesini istediğiniz kurumu seçin" />
-                <Card.Content style={{ height: '80.5%', backgroundColor: '#C5D6E9' }}>
-                    {stores.length > 0 &&
-                        <FlatList
-                            data={searchStores}
-                            style={{ paddingVertical: 0, paddingRight: 0 }}
-                            renderItem={({ item, index }) => <Item store={item} index={index} />}
-                            keyExtractor={item => item.id.toString()}
 
-                        />}
-                </Card.Content>
-                <Card.Actions style={{ backgroundColor: '#E0E2E4', height: '15%' }}>
-                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                        <Button textColor='black' style={checkeds.length > 0 ? { backgroundColor: '#F35454', } : { backgroundColor: "#BDBDBD" }} onPress={handleDelete} disabled={checkeds.length === 0}>Seçilen Mağazaları Sil</Button>
-                    </View>
-                </Card.Actions>
-            </Card>
-        </View>
+        <Card style={{ flex: 1, backgroundColor: '#E7C5BC', elevation: 24, margin: 10, marginTop: 0 }}>
+            <Card.Title subtitleStyle={{ color: 'gray' }} titleStyle={{ fontWeight: 'bold', color: 'black' }} title="KURUM SİLME ALANI" subtitle="Silinmesini istediğiniz kurumu seçin" />
+            {stores.length > 0 &&
+                <FlatList
+                    data={searchStores}
+                    style={{ paddingVertical: 2, backgroundColor: '#C5D6E9', padding: 10 }}
+                    renderItem={({ item, index }) => <Item store={item} index={index} />}
+                    keyExtractor={item => item.id.toString()}
+                    ListHeaderComponent={
+                        <Searchbar
+                            placeholder="Kurum adı ara . . ."
+                            onChangeText={setSearch}
+                            value={search}
+                            style={{ marginVertical: 20 }}
+                            onIconPress={handleSearch}
+                            onClearIconPress={handleSearchClear}
+                        />
+                    }
+
+                />}
+            <Card.Actions style={{ backgroundColor: '#E0E2E4' }}>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <Button textColor='black' style={checkeds.length > 0 ? { backgroundColor: '#F35454', } : { backgroundColor: "#BDBDBD" }} onPress={handleDelete} disabled={checkeds.length === 0}>Seçilen Mağazaları Sil</Button>
+                </View>
+            </Card.Actions>
+        </Card>
     )
 }

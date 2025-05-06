@@ -14,6 +14,8 @@ import { initialFilterDto, initialStoreDto, StoreDto, StoreFilterDto, } from '..
 import TimePickerRangeModal from '../../Stores/timePickerRangeModal';
 import { HelperTextTimeDto, initialHelperTextTimeDto, TimeDto } from '../../../Helpers/DataGrid/CrudTimeDto';
 import { ToastShowParamsCustomType } from '../../../Helpers/Toast/ToastDto';
+import { ScrollView } from 'react-native-gesture-handler';
+
 
 export default function UpdateUserComponent() {
     const [searchUserValue, setSearchUserValue] = useState("");
@@ -47,34 +49,34 @@ export default function UpdateUserComponent() {
         setSearchUser(searchValues)
     }
 
-    const handleClear = async () => {
-        setSearchUser(users)
-    }
-    
+    const handleClear = async () => { setSearchUser(users) }
+
     const UpdateUserLeftContent = (props: any) => <Avatar.Icon {...props} color='yellow' icon="account" />
 
     return (
-        <Card elevation={5} style={{ minWidth: '95%', marginTop: 20, marginHorizontal: 10, height: '90%' }}>
+        <Card elevation={5} style={{ flex: 1, marginTop: 10, margin: 10, }}>
             <Card.Title subtitleStyle={{ opacity: 0.5 }} titleStyle={{ fontWeight: 'bold' }} title="KULLANICIYI GÜNCELLE" subtitle="Güncellenmesini istediğiniz kullanıcıyı arayın" left={UpdateUserLeftContent} />
             <Divider />
-            <Card.Content style={{ justifyContent: 'center', alignItems: 'center', marginTop: 10, flex: 1 }}>
-                <Searchbar
-                    placeholder="Kullanıcı Ara..."
-                    placeholderTextColor={"gray"}
-                    onChangeText={setSearchUserValue}
-                    value={searchUserValue}
-                    onIconPress={async () => { await handleSearch() }}
-                    onClearIconPress={async () => { await handleClear() }}
-                    style={{ marginBottom: 10, width: '95%', justifyContent: 'center', borderWidth: 1, borderColor: '#ACC8E5' }}
-                    showDivider
-                />
-                <FlatList
-                    data={searchUser ?? users}
-                    renderItem={({ item, index }) => <UserItem key={index} selectedUserItem={item} />}
-                    keyExtractor={item => item.id.toString()}
-                />
 
-            </Card.Content>
+            <FlatList
+                ListHeaderComponent={
+                    <Searchbar
+                        placeholder="Kullanıcı Ara..."
+                        placeholderTextColor={"gray"}
+                        onChangeText={setSearchUserValue}
+                        value={searchUserValue}
+                        onIconPress={async () => { await handleSearch() }}
+                        onClearIconPress={async () => { await handleClear() }}
+                        style={{ margin: 10, justifyContent: 'center', borderWidth: 1, borderColor: '#ACC8E5' }}
+                        showDivider
+                    />
+                }
+                data={searchUser ?? users}
+                style={{width:'100%'}}
+                renderItem={({ item, index }) => <UserItem key={index} selectedUserItem={item} />}
+                keyExtractor={item => item.id.toString()}
+            />
+
         </Card>
     )
 }
@@ -344,275 +346,310 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
                 shadowOpacity: 0.25,
                 shadowRadius: 4,
                 elevation: 5,
+                margin: 10,
+                borderRadius: 10,
             }}
             >
-                <Card elevation={5} style={{ marginBottom: 10 }}>
-                    <View style={{ alignItems: 'flex-end', width: '100%', height: '5%' }}>
-                        <IconButton
-                            icon="close"
-                            selected
-                            iconColor={'red'}
-                            style={{ marginHorizontal: 10, position: 'static' }}
-                            size={24}
-                            onPress={() => {
-                                handleCloseModal()
-                                setSelectedUser(selectedUserItem)
-                            }} />
-                    </View>
-                    <Card.Title subtitleStyle={{ opacity: 0.5 }} titleStyle={{ fontWeight: 'bold' }} title="KULLANICI BİLGİLERİNİ GÜNCELLE" subtitle="Kullanıcı Bilgilerini Girin" left={UpdateUserLeftContent} />
-                    <Card.Content style={{ flex: 1 }}>
-                        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                            <TextInput
-                                onBlur={() => { selectedUser.userName && setFormHelperText({ ...formHelperText, userName: selectedUser.userName === "" ? true : false }) }}
-                                mode='outlined'
-                                onChangeText={text => { handleChange(text, "userName") }}
-                                value={selectedUser.userName}
-                                label="Kullanıcı Adı girin . . ."
-                                style={{ width: 350, minWidth: '75%', height: 40 }}
-                                error={formHelperText.userName}
-                            />
-                            {formHelperText.userName && <HelperText type="error" visible={formHelperText.userName}>Lütfen Kullanıcı Adı Girin</HelperText>}
-                            <TextInput
-                                onBlur={() => { selectedUser.password && setFormHelperText({ ...formHelperText, password: selectedUser.password === "" ? true : false }) }}
-                                mode='outlined'
-                                onChangeText={text => { handleChange(text, 'password') }}
-                                value={selectedUser.password}
-                                label="Şifre girin . . ."
-                                style={{ width: 350, minWidth: '75%', height: 40 }}
-                                error={formHelperText.password}
-                            />
-                            {formHelperText.password && <HelperText type="error" visible={formHelperText.password}>Lütfen Şifre Girin</HelperText>}
-                            <TextInput
-                                onBlur={() => { selectedUser.firstName && setFormHelperText({ ...formHelperText, firstName: selectedUser.firstName === "" ? true : false }) }}
-                                mode='outlined'
-                                onChangeText={text => { handleChange(text, 'firstName') }}
-                                value={selectedUser.firstName}
-                                label="Adı girin . . ."
-                                style={{ width: 350, minWidth: '75%', height: 40 }}
-                                error={formHelperText.firstName}
-                            />
-                            {formHelperText.firstName && <HelperText type="error" visible={formHelperText.firstName}>Lütfen Adınızı Girin</HelperText>}
-                            <TextInput
-                                onBlur={() => { selectedUser.lastName && setFormHelperText({ ...formHelperText, lastName: selectedUser.lastName === "" ? true : false }) }}
-                                mode='outlined'
-                                onChangeText={text => { handleChange(text, 'lastName') }}
-                                value={selectedUser.lastName}
-                                label="Soyadı girin . . ."
-                                style={{ width: 350, minWidth: '75%', height: 40 }}
-                                error={formHelperText.lastName}
-                            />
-                            {formHelperText.lastName && <HelperText type="error" visible={formHelperText.lastName}>Lütfen Soyadınızı Girin</HelperText>}
-                            <TextInput
-                                onBlur={() => { selectedUser.email && setFormHelperText({ ...formHelperText, email: selectedUser.email === "" ? true : false }) }}
-                                mode='outlined'
-                                onChangeText={text => { handleChange(text, 'email') }}
-                                value={selectedUser.email}
-                                label="Email girin . . ."
-                                style={{ width: 350, minWidth: '75%', height: 40 }}
-                                error={formHelperText.email}
-                            />
-                            {formHelperText.email && <HelperText type="error" visible={formHelperText.email}>Lütfen Emailinizi Girin</HelperText>}
-                            <TextInput
-                                onBlur={() => { selectedUser.phoneNumber && setFormHelperText({ ...formHelperText, phoneNumber: selectedUser.phoneNumber === "" ? true : false }) }}
-                                mode='outlined'
-                                onChangeText={text => { handleChange(text, 'phoneNumber') }}
-                                value={selectedUser.phoneNumber}
-                                label="Telefon Numarası Girin . . ."
-                                style={{ width: 350, minWidth: '75%', height: 40 }}
-                                error={formHelperText.phoneNumber}
-                            />
-                            {formHelperText.phoneNumber && <HelperText type="error" visible={formHelperText.phoneNumber}>Lütfen Geçerli bir Telfon Numarası Girin</HelperText>}
-                            <List.Section style={{ width: 350, minWidth: '75%', maxWidth: '100%', display: 'flex', alignItems: 'flex-start' }}>
-                                <List.Accordion
-                                    expanded={userExpandListAction}
-                                    onPress={handleUserExpand}
-                                    style={{
-                                        width: 350,
-                                        minWidth: '100%',
-                                        height: 40, // Yüksekliği sınırla
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        paddingVertical: 0, // Varsayılan iç boşluğu kaldır
-                                    }}
-                                    title={selectedUser.roleDto.id > 0 ? selectedUser.roleDto.roleName : "Yetki Seç . . ."}
-                                    titleStyle={{
-                                        fontSize: 15,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        lineHeight: 30, // Yüksekliğe uygun satır yüksekliği
-                                    }}
-                                >
-                                    <List.Item style={{ minWidth: '100%', maxWidth: '75%', justifyContent: 'center' }} title=""
-                                        left={() =>
-                                            <TextInput
-                                                value={searchRoleValue}
-                                                placeholder='Ara'
-                                                label={"Ara"}
-                                                style={{ width: 350, height: 40, minWidth: '70%' }}
-                                                onChangeText={(text) => {
-                                                    if (text != "") {
-                                                        setSearchRoles(roles.filter(x => x.roleName.trim().toLowerCase().includes(text.trim().toLowerCase())))
-                                                    }
-                                                    else {
-                                                        setSearchRoles(roles)
-                                                    }
-                                                    setSearchRoleValue(text)
-                                                }}
-                                            />
-                                        }
-                                    />
-                                    <List.Item
-                                        title=""
-                                        style={{ minWidth: '100%', maxWidth: '75%', backgroundColor: '#D8D8D8', height: 300 }}
-                                        left={() => (
-
-                                            <FlatList
-                                                data={searchRoles}
-                                                renderItem={({ item, index }) => <RoleItem key={item.id.toString()} roleDto={item} handleChange={handleChange} handleUserExpand={handleUserExpand} user={selectedUser} />}
-                                                keyExtractor={item => item.id.toString()}
-                                                // scrollEnabled={false}
-                                                nestedScrollEnabled={true}
-                                            />
-                                        )} />
-                                </List.Accordion>
-                            </List.Section>
-                            {formHelperText.roleDto && <HelperText type="error" visible={formHelperText.roleDto}>Lütfen Yetkiyi Seçin</HelperText>}
-                            <List.Section style={{ width: 350, minWidth: '75%', maxWidth: '100%', display: 'flex', alignItems: 'flex-start', marginTop: 1 }}>
-                                <List.Accordion
-                                    expanded={storeExpandListAction}
-                                    onPress={handleStoreExpand}
-                                    style={{
-                                        width: 270,
-                                        minWidth: '100%',
-                                        height: 40, // Yüksekliği sınırlaf
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        paddingVertical: 0, // Varsayılan iç boşluğu kaldır
-                                    }}
-                                    title={selectedUser.storeDto.storeName && selectedUser.storeDto.storeTime.startDate && selectedUser.storeDto.storeTime.endDate ? `${selectedUser.storeDto.storeName} (${selectedUser.storeDto.storeTime.startDate.substring(0, 5)} - ${selectedUser.storeDto.storeTime.endDate.substring(0, 5)}) ` : "Kurum Seç . . ."}
-                                    titleStyle={{
-                                        fontSize: 15,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        lineHeight: 30, // Yüksekliğe uygun satır yüksekliği
-                                    }}
-                                >
-                                    {formHelperText.storeDto && <HelperText type="error" visible={formHelperText.storeDto}>Lütfen Kurumu Seçin</HelperText>}
-                                    <List.Item style={{ minWidth: '100%', maxWidth: '75%' }} title=""
-                                        left={() =>
-                                            <TextInput
-                                                value={filter.searchValue}
-                                                placeholder='Ara'
-                                                style={{ width: 350, height: 40, minWidth: '70%' }}
-                                                onChangeText={(text) => {
-                                                    if (text != "") {
-                                                        setSearchStores(stores.filter(x => x.storeName.trim().toLowerCase().includes(text.trim().toLowerCase())))
-                                                    }
-                                                    else {
-                                                        setSearchStores(stores)
-                                                    }
-                                                    setfilter(prev => ({ ...prev, searchValue: text }))
-                                                }}
-                                            />
-                                        }
-                                    />
-                                    <List.Item
-                                        title=""
-                                        style={{ minWidth: '100%', maxWidth: '75%', backgroundColor: '#D8D8D8', height: 'auto' }}
-                                        left={() => (
-                                            <FlatList
-                                                data={searchStores}
-                                                renderItem={({ item, index }) => <StoreItem key={item.id.toString()} storeDto={item} handleChange={handleChange} handleStoreExpand={handleStoreExpand} user={selectedUser} setShiftTime={setShiftTime} />}
-                                                keyExtractor={item => item.id.toString()}
-                                                nestedScrollEnabled={true}
-                                            // scrollEnabled={false}
-                                            />
-
-                                        )} />
-                                </List.Accordion>
-                                <List.Item
-                                    title=""
-                                    style={{ minWidth: '100%', maxWidth: '75%', height: 120 }}
-                                    left={() =>
-                                        <View style={{ width: '55%' }}>
-                                            <TimePickerRangeModal setStoreTime={setShiftTime} storeTime={shiftTime} reset={reset} helperTextTimeDto={helperTextTimeDto} setHelperTextTimeDto={setHelperTextTimeDto} />
-                                        </View>
-                                    }
-                                    right={() =>
-                                        <View style={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', width: '45%' }}>
-                                            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', height: '20%', marginVertical: 20 }}>
-                                                <RadioButton
-                                                    value={selectedUser.gender}
-                                                    uncheckedColor={formHelperText.gender ? 'red' : ""}
-                                                    color={MD3Colors.primary70}
-                                                    status={selectedUser.gender === GenderEnum.Man ? 'checked' : 'unchecked'}
-                                                    onPress={() => {
-                                                        handleChange(GenderEnum.Man, 'gender')
-                                                    }}
-                                                />
-                                                <List.Icon color={MD3Colors.primary70} icon="human-male" />
-                                                <Text style={selectedUser.gender === GenderEnum.Man ? { fontWeight: 'bold', fontSize: 18 } : ""}>Erkek</Text>
-                                            </View>
-                                            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', height: '20%' }}>
-                                                <RadioButton
-                                                    value={selectedUser.gender}
-                                                    color={MD3Colors.tertiary70}
-                                                    uncheckedColor={formHelperText.gender ? 'red' : ""}
-                                                    status={selectedUser.gender === GenderEnum.Woman ? 'checked' : 'unchecked'}
-                                                    onPress={() => {
-                                                        handleChange(GenderEnum.Woman, 'gender')
-                                                    }}
-                                                />
-                                                <List.Icon color={MD3Colors.tertiary70} icon="human-female" />
-                                                <Text style={selectedUser.gender === GenderEnum.Woman ? { fontWeight: 'bold', fontSize: 18 } : ""}>Kadın</Text>
-                                            </View>
-                                            {formHelperText.gender && <HelperText type="error" visible={formHelperText.gender}>Lütfen Cinsiyet Girin</HelperText>}
-                                        </View>
-                                    }
-                                />
-                                <List.Item
-                                    title={
-                                        <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginLeft: 2 }}>
-                                            <Text style={[{ fontWeight: 'bold', fontSize: 18 }, selectedUser.roleDto.id === 2 ? { color: "gray" } : isActive ? { color: 'green' } : { color: 'red' }]}>{isActive ? "Aktif" : "Pasif"}</Text>
-                                            <IconButton
-                                                icon="information-outline"
-                                                selected
-                                                iconColor={!isActive ? 'red' : 'green'}
-                                                style={{ margin: 0, padding: 0 }}
-                                                size={24}
-                                                onPress={() => {
-                                                    setInfoMessage(true)
-                                                }}
-                                            />
-                                        </View>
-                                    }
-                                    titleStyle={[{ fontWeight: 'bold', fontSize: 18, marginLeft: 12 }, isActive ? { color: 'green' } : { color: 'red' }]}
-                                    style={{ justifyContent: 'center', alignItems: 'center' }}
-                                    left={() => <>
-                                        <Switch value={isActive} trackColor={{ true: "#79AB54", false: "#D5819A" }} thumbColor={(isAdmin || isStoreAdmin) ? "gray" : isActive ? "green" : "red"} color={(isStoreAdmin || isAdmin) ? "gray" : isActive ? "green" : "red"} onValueChange={onToggleSwitch} disabled={isStoreAdmin || isAdmin} />
-                                    </>}
-                                    right={() =>
-                                        <TouchableOpacity>
-                                            <Button
-                                                buttonColor='#CEC96F'
-                                                mode='contained'
-                                                textColor='black'
-                                                disabled={handleUpdateButtonDisabled()}
-                                                onPress={async () => {
-                                                    await handleAddUser(selectedUser)
-                                                }}
-                                            >Güncelle
-                                            </Button>
-                                        </TouchableOpacity>
-                                    }
-                                />
-                                {formHelperText.gender && <HelperText type="error" visible={formHelperText.gender}>Lütfen Cinsiyet Girin</HelperText>}
-                                {infoMessage && <Chip style={{ backgroundColor: '#ACC8E5', marginTop: 5, maxWidth: '100%', gap: 5 }} textStyle={{ textAlign: 'left', flexWrap: 'wrap' }} icon="information" >{isActive ? "Personelin Çalışma Durumu aktif" : "Personelin Çalışma Durumu pasif"}</Chip>}
-                                {infoMessage && selectedUser.roleDto.id === 2 && <Chip style={{ backgroundColor: '#ACC8E5', marginTop: 5, maxWidth: '100%' }} textStyle={{ textAlign: 'left', flexWrap: 'wrap' }} icon="information" >{"Mağaza Yöneticileri Pasif yada Aktif yapamaz"}</Chip>}
-                            </List.Section>
+                <ScrollView>
+                    <Card elevation={5} style={{ flex: 1, borderRadius: 10 }}>
+                        <View style={{ alignItems: 'flex-end', width: '100%', height: '5%' }}>
+                            <IconButton
+                                icon="close"
+                                selected
+                                iconColor={'red'}
+                                style={{ marginHorizontal: 10, position: 'static' }}
+                                size={24}
+                                onPress={() => {
+                                    handleCloseModal()
+                                    setSelectedUser(selectedUserItem)
+                                }} />
                         </View>
-                    </Card.Content>
-                </Card>
+                        <Card.Title subtitleStyle={{ opacity: 0.5 }} titleStyle={{ fontWeight: 'bold' }} title="KULLANICI BİLGİLERİNİ GÜNCELLE" subtitle="Kullanıcı Bilgilerini Girin" left={UpdateUserLeftContent} />
+                        <Card.Content style={{ flex: 1 }}>
+                            <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                                <TextInput
+                                    onBlur={() => { selectedUser.userName && setFormHelperText({ ...formHelperText, userName: selectedUser.userName === "" ? true : false }) }}
+                                    mode='outlined'
+                                    onChangeText={text => { handleChange(text, "userName") }}
+                                    value={selectedUser.userName}
+                                    label="Kullanıcı Adı girin . . ."
+                                    style={{ width: 350, minWidth: '75%', height: 40 }}
+                                    error={formHelperText.userName}
+                                />
+                                {formHelperText.userName && <HelperText type="error" visible={formHelperText.userName}>Lütfen Kullanıcı Adı Girin</HelperText>}
+                                <TextInput
+                                    onBlur={() => { selectedUser.password && setFormHelperText({ ...formHelperText, password: selectedUser.password === "" ? true : false }) }}
+                                    mode='outlined'
+                                    onChangeText={text => { handleChange(text, 'password') }}
+                                    value={selectedUser.password}
+                                    label="Şifre girin . . ."
+                                    style={{ width: 350, minWidth: '75%', height: 40 }}
+                                    error={formHelperText.password}
+                                />
+                                {formHelperText.password && <HelperText type="error" visible={formHelperText.password}>Lütfen Şifre Girin</HelperText>}
+                                <TextInput
+                                    onBlur={() => { selectedUser.firstName && setFormHelperText({ ...formHelperText, firstName: selectedUser.firstName === "" ? true : false }) }}
+                                    mode='outlined'
+                                    onChangeText={text => { handleChange(text, 'firstName') }}
+                                    value={selectedUser.firstName}
+                                    label="Adı girin . . ."
+                                    style={{ width: 350, minWidth: '75%', height: 40 }}
+                                    error={formHelperText.firstName}
+                                />
+                                {formHelperText.firstName && <HelperText type="error" visible={formHelperText.firstName}>Lütfen Adınızı Girin</HelperText>}
+                                <TextInput
+                                    onBlur={() => { selectedUser.lastName && setFormHelperText({ ...formHelperText, lastName: selectedUser.lastName === "" ? true : false }) }}
+                                    mode='outlined'
+                                    onChangeText={text => { handleChange(text, 'lastName') }}
+                                    value={selectedUser.lastName}
+                                    label="Soyadı girin . . ."
+                                    style={{ width: 350, minWidth: '75%', height: 40 }}
+                                    error={formHelperText.lastName}
+                                />
+                                {formHelperText.lastName && <HelperText type="error" visible={formHelperText.lastName}>Lütfen Soyadınızı Girin</HelperText>}
+                                <TextInput
+                                    onBlur={() => { selectedUser.email && setFormHelperText({ ...formHelperText, email: selectedUser.email === "" ? true : false }) }}
+                                    mode='outlined'
+                                    onChangeText={text => { handleChange(text, 'email') }}
+                                    value={selectedUser.email}
+                                    label="Email girin . . ."
+                                    style={{ width: 350, minWidth: '75%', height: 40 }}
+                                    error={formHelperText.email}
+                                />
+                                {formHelperText.email && <HelperText type="error" visible={formHelperText.email}>Lütfen Emailinizi Girin</HelperText>}
+                                <TextInput
+                                    onBlur={() => { selectedUser.phoneNumber && setFormHelperText({ ...formHelperText, phoneNumber: selectedUser.phoneNumber === "" ? true : false }) }}
+                                    mode='outlined'
+                                    onChangeText={text => { handleChange(text, 'phoneNumber') }}
+                                    value={selectedUser.phoneNumber}
+                                    label="Telefon Numarası Girin . . ."
+                                    style={{ width: 350, minWidth: '75%', height: 40 }}
+                                    error={formHelperText.phoneNumber}
+                                />
+                                {formHelperText.phoneNumber && <HelperText type="error" visible={formHelperText.phoneNumber}>Lütfen Geçerli bir Telfon Numarası Girin</HelperText>}
+                                <List.Section style={{ width: 350, minWidth: '75%', maxWidth: '100%', display: 'flex', alignItems: 'flex-start' }}>
+                                    <List.Accordion
+                                        expanded={userExpandListAction}
+                                        onPress={handleUserExpand}
+                                        style={{
+                                            width: '100%',
+                                            minWidth: '100%',
+                                            height: 40, // Yüksekliği sınırla
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            paddingVertical: 0, // Varsayılan iç boşluğu kaldır
+                                        }}
+                                        title={selectedUser.roleDto.id > 0 ? selectedUser.roleDto.roleName : "Yetki Seç . . ."}
+                                        titleStyle={{
+                                            fontSize: 15,
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            lineHeight: 30, // Yüksekliğe uygun satır yüksekliği
+                                        }}
+                                    >
+                                        <List.Item style={{ minWidth: '100%', maxWidth: '75%', justifyContent: 'center' }} title=""
+                                            left={() =>
+                                                <TextInput
+                                                    value={searchRoleValue}
+                                                    placeholder='Ara'
+                                                    label={"Ara"}
+                                                    style={{ width: 350, height: 40, minWidth: '70%' }}
+                                                    onChangeText={(text) => {
+                                                        if (text != "") {
+                                                            setSearchRoles(roles.filter(x => x.roleName.trim().toLowerCase().includes(text.trim().toLowerCase())))
+                                                        }
+                                                        else {
+                                                            setSearchRoles(roles)
+                                                        }
+                                                        setSearchRoleValue(text)
+                                                    }}
+                                                />
+                                            }
+                                        />
+                                        <List.Item
+                                            title=""
+                                            style={{
+                                                minWidth: '100%',
+                                                maxWidth: '75%',
+                                                width: '100%',
+                                                margin: 0,
+                                                padding: 0,
+                                                backgroundColor: '#D8D8D8',
+                                            }}
+                                            left={() => (
+                                                <ScrollView
+                                                    nestedScrollEnabled
+                                                    persistentScrollbar
+                                                    style={{
+                                                        maxHeight: 200,
+                                                        width: '100%',
+                                                        minWidth: '100%',
+                                                        maxWidth: '100%',
+                                                        margin: 0,
+                                                        padding: 0
+                                                    }}
+                                                >
+                                                    {searchRoles.map(item => (
+                                                        <RoleItem key={item.id.toString()} roleDto={item} handleChange={handleChange} handleUserExpand={handleUserExpand} user={selectedUser} />
+                                                    ))}
+                                                </ScrollView>
+
+                                            )} />
+                                    </List.Accordion>
+                                </List.Section>
+                                {formHelperText.roleDto && <HelperText type="error" visible={formHelperText.roleDto}>Lütfen Yetkiyi Seçin</HelperText>}
+                                <List.Section style={{ width: 350, minWidth: '75%', maxWidth: '100%', display: 'flex', alignItems: 'flex-start', marginTop: 1 }}>
+                                    <List.Accordion
+                                        expanded={storeExpandListAction}
+                                        onPress={handleStoreExpand}
+                                        style={{
+                                            width: '100%',
+                                            minWidth: '100%',
+                                            height: 40, // Yüksekliği sınırla
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            paddingVertical: 0, // Varsayılan iç boşluğu kaldır
+                                        }}
+                                        title={selectedUser.storeDto.storeName && selectedUser.storeDto.storeTime.startDate && selectedUser.storeDto.storeTime.endDate ? `${selectedUser.storeDto.storeName} (${selectedUser.storeDto.storeTime.startDate.substring(0, 5)} - ${selectedUser.storeDto.storeTime.endDate.substring(0, 5)}) ` : "Kurum Seç . . ."}
+                                        titleStyle={{
+                                            fontSize: 15,
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            lineHeight: 30, // Yüksekliğe uygun satır yüksekliği
+                                        }}
+                                    >
+                                        {formHelperText.storeDto && <HelperText type="error" visible={formHelperText.storeDto}>Lütfen Kurumu Seçin</HelperText>}
+                                        <List.Item style={{ minWidth: '100%', maxWidth: '75%' }} title=""
+                                            left={() =>
+                                                <TextInput
+                                                    value={filter.searchValue}
+                                                    placeholder='Ara'
+                                                    style={{ width: 350, height: 40, minWidth: '70%' }}
+                                                    onChangeText={(text) => {
+                                                        if (text != "") {
+                                                            setSearchStores(stores.filter(x => x.storeName.trim().toLowerCase().includes(text.trim().toLowerCase())))
+                                                        }
+                                                        else {
+                                                            setSearchStores(stores)
+                                                        }
+                                                        setfilter(prev => ({ ...prev, searchValue: text }))
+                                                    }}
+                                                />
+                                            }
+                                        />
+                                        <List.Item
+                                            title=""
+                                            style={{
+                                                padding: 0,
+                                                margin: 0,
+                                                width: '100%',
+                                                maxWidth: '100%',
+                                                minWidth: '100%',
+                                                backgroundColor: '#D8D8D8',
+                                            }} //backgroundColor: '#D8D8D8'
+                                            left={() => (
+                                                <ScrollView
+                                                    nestedScrollEnabled
+                                                    persistentScrollbar
+                                                    style={{
+                                                        maxHeight: 200,
+                                                        width: '100%',
+                                                        minWidth: '100%',
+                                                        maxWidth: '100%',
+                                                        margin: 0,
+                                                        padding: 0
+                                                    }}>
+                                                    {searchStores.map((item) => (
+                                                        <StoreItem key={item.id.toString()} storeDto={item} handleChange={handleChange} handleStoreExpand={handleStoreExpand} user={selectedUser} setShiftTime={setShiftTime} />
+                                                    ))}
+                                                </ScrollView>
+                                            )}
+                                        />
+                                    </List.Accordion>
+                                    <List.Item
+                                        title=""
+                                        style={{ minWidth: '100%', maxWidth: '75%', height: 120 }}
+                                        left={() =>
+                                            <View style={{ width: '55%' }}>
+                                                <TimePickerRangeModal setStoreTime={setShiftTime} storeTime={shiftTime} reset={reset} helperTextTimeDto={helperTextTimeDto} setHelperTextTimeDto={setHelperTextTimeDto} />
+                                            </View>
+                                        }
+                                        right={() =>
+                                            <View style={{ flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', width: '45%' }}>
+                                                <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', height: '20%', marginVertical: 20 }}>
+                                                    <RadioButton
+                                                        value={selectedUser.gender}
+                                                        uncheckedColor={formHelperText.gender ? 'red' : ""}
+                                                        color={MD3Colors.primary70}
+                                                        status={selectedUser.gender === GenderEnum.Man ? 'checked' : 'unchecked'}
+                                                        onPress={() => {
+                                                            handleChange(GenderEnum.Man, 'gender')
+                                                        }}
+                                                    />
+                                                    <List.Icon color={MD3Colors.primary70} icon="human-male" />
+                                                    <Text style={selectedUser.gender === GenderEnum.Man ? { fontWeight: 'bold', fontSize: 18 } : ""}>Erkek</Text>
+                                                </View>
+                                                <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', height: '20%' }}>
+                                                    <RadioButton
+                                                        value={selectedUser.gender}
+                                                        color={MD3Colors.tertiary70}
+                                                        uncheckedColor={formHelperText.gender ? 'red' : ""}
+                                                        status={selectedUser.gender === GenderEnum.Woman ? 'checked' : 'unchecked'}
+                                                        onPress={() => {
+                                                            handleChange(GenderEnum.Woman, 'gender')
+                                                        }}
+                                                    />
+                                                    <List.Icon color={MD3Colors.tertiary70} icon="human-female" />
+                                                    <Text style={selectedUser.gender === GenderEnum.Woman ? { fontWeight: 'bold', fontSize: 18 } : ""}>Kadın</Text>
+                                                </View>
+                                                {formHelperText.gender && <HelperText type="error" visible={formHelperText.gender}>Lütfen Cinsiyet Girin</HelperText>}
+                                            </View>
+                                        }
+                                    />
+                                    <List.Item
+                                        title={
+                                            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginLeft: 2 }}>
+                                                <Text style={[{ fontWeight: 'bold', fontSize: 18 }, selectedUser.roleDto.id === 2 ? { color: "gray" } : isActive ? { color: 'green' } : { color: 'red' }]}>{isActive ? "Aktif" : "Pasif"}</Text>
+                                                <IconButton
+                                                    icon="information-outline"
+                                                    selected
+                                                    iconColor={!isActive ? 'red' : 'green'}
+                                                    style={{ margin: 0, padding: 0 }}
+                                                    size={24}
+                                                    onPress={() => {
+                                                        setInfoMessage(true)
+                                                    }}
+                                                />
+                                            </View>
+                                        }
+                                        titleStyle={[{ fontWeight: 'bold', fontSize: 18, marginLeft: 12 }, isActive ? { color: 'green' } : { color: 'red' }]}
+                                        style={{ justifyContent: 'center', alignItems: 'center' }}
+                                        left={() => <>
+                                            <Switch value={isActive} trackColor={{ true: "#79AB54", false: "#D5819A" }} thumbColor={(isAdmin || isStoreAdmin) ? "gray" : isActive ? "green" : "red"} color={(isStoreAdmin || isAdmin) ? "gray" : isActive ? "green" : "red"} onValueChange={onToggleSwitch} disabled={isStoreAdmin || isAdmin} />
+                                        </>}
+                                        right={() =>
+                                            <TouchableOpacity>
+                                                <Button
+                                                    buttonColor='#CEC96F'
+                                                    mode='contained'
+                                                    textColor='black'
+                                                    disabled={handleUpdateButtonDisabled()}
+                                                    onPress={async () => {
+                                                        await handleAddUser(selectedUser)
+                                                    }}
+                                                >Güncelle
+                                                </Button>
+                                            </TouchableOpacity>
+                                        }
+                                    />
+                                    {formHelperText.gender && <HelperText type="error" visible={formHelperText.gender}>Lütfen Cinsiyet Girin</HelperText>}
+                                    {infoMessage && <Chip style={{ backgroundColor: '#ACC8E5', marginTop: 5, maxWidth: '100%', gap: 5 }} textStyle={{ textAlign: 'left', flexWrap: 'wrap' }} icon="information" >{isActive ? "Personelin Çalışma Durumu aktif" : "Personelin Çalışma Durumu pasif"}</Chip>}
+                                    {infoMessage && selectedUser.roleDto.id === 2 && <Chip style={{ backgroundColor: '#ACC8E5', marginTop: 5, maxWidth: '100%' }} textStyle={{ textAlign: 'left', flexWrap: 'wrap' }} icon="information" >{"Mağaza Yöneticileri Pasif yada Aktif yapamaz"}</Chip>}
+                                </List.Section>
+                            </View>
+                        </Card.Content>
+                    </Card>
+                </ScrollView>
             </View>
         </View>
     </Modal>

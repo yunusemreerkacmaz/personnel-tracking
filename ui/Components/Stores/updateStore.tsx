@@ -98,29 +98,29 @@ export default function UpdateStoreComponent() {
     />
   );
   return (
-    <View style={{ width: '95%', height: '96%' }}>
-      <Searchbar
-        placeholder="Kurum adı ara . . ."
-        onChangeText={setSearch}
-        value={search}
-        style={{ marginVertical: 20 }}
-        onIconPress={handleSearch}
-        onClearIconPress={handleSearchClear}
-      />
-      <Card style={{ backgroundColor: '#E7C5BC', maxHeight: '83%', elevation: 24 }}>
-        <Card.Title subtitleStyle={{ color: 'gray' }} titleStyle={{ fontWeight: 'bold', color: 'black' }} title="KURUM GÜNCELLEME ALANI" subtitle="Güncellenmesini istediğiniz kurumu seçin" />
-        <Card.Content style={{ height: '90%', backgroundColor: '#C5D6E9' }}>
-          <FlatList
-            data={searchStores}
-            style={{ paddingVertical: 2 }}
-            renderItem={({ item, index }) => <StoreItem storeItemDto={item} index={index} key={index} />}
-            keyExtractor={item => item.id.toString()}
+    <Card style={{ flex: 1, backgroundColor: '#E7C5BC', elevation: 24, margin: 10, marginTop: 0 }}>
+      <Card.Title subtitleStyle={{ color: 'gray' }} titleStyle={{ fontWeight: 'bold', color: 'black' }} title="KURUM GÜNCELLEME ALANI" subtitle="Güncellenmesini istediğiniz kurumu seçin" />
+      <FlatList
+        data={searchStores}
+        style={{ paddingVertical: 2, backgroundColor: '#C5D6E9', padding: 10 }}
+        renderItem={({ item, index }) => <StoreItem storeItemDto={item} index={index} key={index} />}
+        keyExtractor={item => item.id.toString()}
+        ListHeaderComponent={
+          <Searchbar
+            placeholder="Kurum adı ara . . ."
+            onChangeText={setSearch}
+            value={search}
+            style={{ marginVertical: 20 }}
+            onIconPress={handleSearch}
+            onClearIconPress={handleSearchClear}
           />
-        </Card.Content>
-      </Card>
-      {visible === "map" && <StoreMapView data={selectedValue} setVisible={setVisible} visible={visible} proccess={CrudEnum.UpdateStore} setCrudStatus={setCrudStatus} key={selectedValue.id} setFormHelperText={undefined} />}
-      {visible === "time" && <EditStoreTimeAndName visible={visible} setVisible={setVisible} selectedValue={selectedValue} setStores={setStores} setCrudStatus={setCrudStatus} />}
-    </View>
+        }
+      />
+      <Card.Actions style={{ padding: 0 }}>
+        {visible === "map" && <StoreMapView data={selectedValue} setVisible={setVisible} visible={visible} proccess={CrudEnum.UpdateStore} setCrudStatus={setCrudStatus} key={selectedValue.id} setFormHelperText={undefined} />}
+        {visible === "time" && <EditStoreTimeAndName visible={visible} setVisible={setVisible} selectedValue={selectedValue} setStores={setStores} setCrudStatus={setCrudStatus} />}
+      </Card.Actions>
+    </Card>
   )
 }
 

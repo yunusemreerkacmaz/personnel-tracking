@@ -426,7 +426,7 @@ export default function Navigator() {
                 component={StoreComponent}
                 options={{
                     drawerStyle: { width: 250 },
-                    headerShown: true,
+                    headerShown: screenOrientation.isPortrait,
                     title: 'Kurum İşlemleri'
                 }}
             />

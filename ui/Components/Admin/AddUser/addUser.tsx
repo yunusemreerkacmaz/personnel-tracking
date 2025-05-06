@@ -321,7 +321,6 @@ export default function AddUserComponent() {
             />
             {formHelperText.phoneNumber && <HelperText type="error" visible={formHelperText.phoneNumber}>Lütfen geçerli bir telefon numarası girin</HelperText>}
             <List.Section style={{ width: 350, minWidth: '75%', maxWidth: '100%', display: 'flex', alignItems: 'flex-start' }}>
-
               <List.Accordion
                 expanded={userExpandListAction}
                 onPress={handleUserExpand}
@@ -386,10 +385,8 @@ export default function AddUserComponent() {
                     </ScrollView>
                   )} />
               </List.Accordion>
-
             </List.Section>
             {formHelperText.roleDto && <HelperText type="error" visible={formHelperText.roleDto}>Lütfen Yetkiyi Seçin</HelperText>}
-
             <List.Section style={{ width: 350, minWidth: '75%', maxWidth: '100%', display: 'flex', alignItems: 'flex-start', marginTop: 1 }}>
               <List.Accordion
                 expanded={storeExpandListAction}

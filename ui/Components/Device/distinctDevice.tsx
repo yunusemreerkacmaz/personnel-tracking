@@ -15,7 +15,7 @@ import { initialBarcodeState } from '../Barcode/Dtos/barcodeDto';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { ToastShowParamsCustomType } from '../../Helpers/Toast/ToastDto';
 
-export default function DistinctDevice() {
+export default function DistinctDevice() {  // Cihaz Onayla 
     const [search, setSearch] = React.useState('');
     const [searchUsers, setSearchUsers] = useState<DeviceDto[]>([])
     const [distinctDeviceUsers, setDistinctDeviceUsers] = useState<DeviceDto[]>([])
@@ -48,35 +48,31 @@ export default function DistinctDevice() {
     )
 
     return (
-        <View style={{ width: '95%', height: '100%' }}>
-            <Card style={{ maxHeight: '90%', elevation: 24, backgroundColor: '#E7C5BC' }}>
-                <Card.Title subtitleStyle={{ color: 'gray' }} titleStyle={{ fontWeight: 'bold', color: 'black' }} title="YENİ CİHAZ ONAYLAMA ALANI" subtitle="Cihazını onaylanmasını istediğiniz kişiyi seçin" />
-                <Card.Content style={{ height: '90%', backgroundColor: '#C5D6E9' }}>
-                    {
-                        distinctDeviceUsers?.length === 0 ?
-                            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                                <Text>Gösterilecek Veri yok</Text>
-                            </View> :
-                            <FlatList
-                                ListHeaderComponent={
-                                    <Searchbar
-                                        placeholder="Cihaz adı ara . . ."
-                                        onChangeText={setSearch}
-                                        value={search}
-                                        style={{ marginVertical: 20 }}
-                                        onIconPress={handleSearch}
-                                        onClearIconPress={handleClearSearch}
-                                    />
-                                }
-                                data={searchUsers}
-                                style={{ paddingVertical: 2 }}
-                                renderItem={({ item, index }) => <DeviceItem deviceDto={item} index={index + 1} setApprovedStatus={setApprovedStatus} approvedStatus={approvedStatus} />}
-                                keyExtractor={item => item.id.toString()}
+        <Card style={{ flex: 1, elevation: 24, backgroundColor: '#E7C5BC', margin: 10, marginTop: 0 }}>
+            <Card.Title subtitleStyle={{ color: 'gray' }} titleStyle={{ fontWeight: 'bold', color: 'black' }} title="YENİ CİHAZ ONAYLAMA ALANI" subtitle="Cihazını onaylanmasını istediğiniz kişiyi seçin" />
+            {
+                distinctDeviceUsers?.length === 0 ?
+                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                        <Text>Gösterilecek Veri yok</Text>
+                    </View> :
+                    <FlatList
+                        ListHeaderComponent={
+                            <Searchbar
+                                placeholder="Cihaz adı ara . . ."
+                                onChangeText={setSearch}
+                                value={search}
+                                style={{ marginVertical: 5 }}
+                                onIconPress={handleSearch}
+                                onClearIconPress={handleClearSearch}
                             />
-                    }
-                </Card.Content>
-            </Card>
-        </View>
+                        }
+                        data={searchUsers}
+                        style={{ paddingVertical: 2, backgroundColor: '#C5D6E9', padding: 10 }}
+                        renderItem={({ item, index }) => <DeviceItem deviceDto={item} index={index + 1} setApprovedStatus={setApprovedStatus} approvedStatus={approvedStatus} />}
+                        keyExtractor={item => item.id.toString()}
+                    />
+            }
+        </Card>
     )
 }
 type DeviceItemProps = { deviceDto: DeviceDto, index: number, approvedStatus: boolean, setApprovedStatus: React.Dispatch<React.SetStateAction<boolean>> }
@@ -85,7 +81,6 @@ const DeviceItem: React.FC<DeviceItemProps> = ({ deviceDto, index, setApprovedSt
     const [modalVisible, setModalVisible] = useState(false);
 
     const handleUpdateDevice = async (value: boolean) => {
-
         Toast.show({
             text1: "Cihaz İşlemleri Onaylama Ekranı",
             text2: "Cihaz onaylamak istediğinizden emin misiniz ?",
@@ -124,7 +119,7 @@ const DeviceItem: React.FC<DeviceItemProps> = ({ deviceDto, index, setApprovedSt
         title={`${deviceDto.userDto.firstName} ${deviceDto.userDto.lastName}`}
         key={index}
         titleStyle={{ fontSize: 14, width: "100%", }}
-        style={{ paddingRight: 0,paddingVertical:1 }} // Yüksekliği azaltmak için
+        style={{ paddingRight: 0, paddingVertical: 1 }} // Yüksekliği azaltmak için
         right={(id) => (
             <View style={{ width: '50%', flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 5 }}>
                 <DistinctDeviceInformationModal modalVisible={modalVisible} setModalVisible={setModalVisible} deviceDto={deviceDto}

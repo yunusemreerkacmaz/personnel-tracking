@@ -49,10 +49,8 @@ export default function UserLoginComponent() {
     const handleClearSearch = () => { setSearchUsers(users) }
 
     return (
-        <View style={{ width: '95%', height: '100%' }}>
-            <Card style={{ maxHeight: '90%', elevation: 24, backgroundColor: '#E7C5BC' }}>
+            <Card style={{ flex:1, elevation: 24, backgroundColor: '#E7C5BC',padding:15 }}>
                 <Card.Title subtitleStyle={{ color: 'gray' }} titleStyle={{ fontWeight: 'bold', color: 'black' }} title="KULLANICI GİRİŞİ ONAYLAMA ALANI" subtitle="Girişinin onaylanmasını istediğiniz kişiyi seçin" />
-                <Card.Content style={{ height: '90%', backgroundColor: '#C5D6E9' }}>
                     {
                         searchUsers?.length === 0 ?
                             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -64,20 +62,18 @@ export default function UserLoginComponent() {
                                         placeholder="Cihaz adı ara . . ."
                                         onChangeText={setSearch}
                                         value={search}
-                                        style={{ marginVertical: 20 }}
+                                        style={{ marginVertical: 10, }}
                                         onIconPress={handleSearch}
                                         onClearIconPress={handleClearSearch}
                                     />
                                 }
                                 data={searchUsers}
-                                style={{ paddingVertical: 2 }}
+                                style={{ paddingVertical: 2,backgroundColor: '#C5D6E9', padding: 10,borderRadius:10  }}
                                 renderItem={({ item, index }) => <UserLoginItem userDto={item} index={index + 1} setCrudStatus={setCrudStatus} crudStatus={crudStatus}  key={item.userDto.id}/>}
                                 keyExtractor={item => item.userDto.id.toString()}
                             />
                     }
-                </Card.Content>
             </Card>
-        </View>
     )
 }
 type UserBarcodeLoginProps = { userDto: UserBarcodeLoginDto, index: number, crudStatus: boolean, setCrudStatus: React.Dispatch<React.SetStateAction<boolean>> }
