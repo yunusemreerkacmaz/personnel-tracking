@@ -17,6 +17,9 @@ export const loginSlice = createSlice({
         },
         logout(state){
             state.isLoggedIn = false
+        },
+        rememberMe(state,action:PayloadAction<boolean>){
+            state.rememberMe = action.payload
         }
     },
     extraReducers: (builder) => {

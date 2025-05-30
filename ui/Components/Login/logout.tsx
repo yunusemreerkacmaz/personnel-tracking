@@ -4,10 +4,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../Store/store';
 import { LoginJwtTokenEnum, RememberMeEnum } from '../../Enums/JwtTokenEnum';
 import { loginSlice } from './Requests/LoginSlice';
-import { barcodeSlice } from '../Barcode/Requests/barcodeSlice';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { deviceInfoSlice } from '../Device/Requests/deviceInfoSlice';
+import { logoutEntryExit } from '../EntryExit/Requests/entryExitSlice';
+import { initialEntryExitDto } from '../EntryExit/Dtos/EntryExitDto';
 
 export type DrawerParamList = {
     Profile: undefined;
@@ -41,7 +42,8 @@ export default function LogoutComponent() {
                         dispatch(loginSlice.actions.loginReset())
                     }
                     dispatch(loginSlice.actions.logout())
-                    dispatch(barcodeSlice.actions.barcodeReset())
+                    // dispatch(barcodeSlice.actions.barcodeReset())
+                    dispatch(logoutEntryExit(initialEntryExitDto))
                     dispatch(deviceInfoSlice.actions.deviceReset())
                     navigation.navigate('login')
                 }

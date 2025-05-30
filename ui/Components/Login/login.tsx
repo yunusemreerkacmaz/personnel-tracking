@@ -1,21 +1,21 @@
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import React, { useState } from 'react'
-import { View, SafeAreaView, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { CommonActions, useFocusEffect, useNavigation } from '@react-navigation/native';
+import React, { useMemo, useState } from 'react'
+import { View, SafeAreaView, StyleSheet, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { DrawerParamList } from '../../Navigator/navigator';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Button, Card, TextInput, Avatar, HelperText, Switch, Chip } from 'react-native-paper';
-import { LoginDto } from './Dtos/LoginDto';
+import { initialLoginDto, LoginDto } from './Dtos/LoginDto';
 import { loginCheckStore, loginStore } from './Requests/loginStore';
 import { useDispatch, useSelector, } from 'react-redux';
 import { AppDispatch, RootState } from '../../Store/store';
-import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LoginJwtTokenEnum, RememberMeEnum } from '../../Enums/JwtTokenEnum';
 import { ResponseStatus, ServiceResult } from '../../ServiceResults/serviceResult';
 import { LinearGradient } from 'expo-linear-gradient';
 import { initialRoleDto } from '../Admin/AddRole/Dtos/roleDto';
 import { initialUserDto } from '../Admin/AddUser/Dtos/userDto';
+import { loginSlice } from './Requests/LoginSlice';
 
 export default function Login() {
   type NavigationProps = DrawerNavigationProp<DrawerParamList, 'Profile', 'Home'>;
@@ -25,21 +25,26 @@ export default function Login() {
   const inputRef1 = React.useRef<any>(null);
   const inputRef2 = React.useRef<any>(null);
   const loginState = useSelector((state: RootState) => state.login)
-  const [login, setLogin] = useState<LoginDto>(loginState)
-  const [isSwitchOn, setIsSwitchOn] = React.useState(loginState.rememberMe);
+  const [login, setLogin] = useState<LoginDto>(initialLoginDto)
+  const [isSwitchOn, setIsSwitchOn] = React.useState(false);
   const screen = useSelector((state: RootState) => state.screenOrientationSlice)
 
-  const onfocus = () => {
-    if (login.userDto.userName === "") {
-      return inputRef1.current?.focus()
-    }
-    if (login.userDto.password === "") {
-      return inputRef2.current?.focus()
-    }
-  }
+  // const onfocus = () => {
+  //   if (login.userDto.userName === "") {
+  //     return inputRef1.current?.focus()
+  //   }
+  //   if (login.userDto.password === "") {
+  //     return inputRef2.current?.focus()
+  //   }
+  // }
 
+  
   useFocusEffect(
     React.useCallback(() => {
+      if ( login != loginState && isSwitchOn != loginState.rememberMe && !loginState.isLoggedIn) {
+        setLogin(loginState)
+        setIsSwitchOn(loginState.rememberMe ? true : false)
+      }
       let flag = true
       var storeData = async () => {
         const token = await AsyncStorage.getItem(LoginJwtTokenEnum.key)
@@ -70,7 +75,7 @@ export default function Login() {
             }
           })
         }
-        onfocus()
+        // onfocus()
       }
       storeData();
       flag = false
@@ -159,6 +164,7 @@ export default function Login() {
   }
 
   const handleSubmit = async () => {
+    Keyboard.dismiss()    // Klavyenin kapanmasını sağlar
     if (isSwitchOn) {
       await AsyncStorage.setItem(RememberMeEnum.key, RememberMeEnum.value)
     }
@@ -174,100 +180,123 @@ export default function Login() {
           const payload = response.payload as ServiceResult<LoginDto>;
           const { userDto, isLoggedIn, roleDto, rememberMe } = payload.result;
           if (payload.responseStatus === ResponseStatus.IsSuccess) {
-            setLogin({
-              userDto: userDto,
-              roleDto: roleDto,
-              isLoggedIn: isLoggedIn,
-              rememberMe: rememberMe
-            })
+            // setLogin({
+            //   userDto: userDto,
+            //   roleDto: roleDto,
+            //   isLoggedIn: isLoggedIn,
+            //   rememberMe: rememberMe
+            // })
+            //  setLogin(initialLoginDto)
             setFormHelperText({ ...formHelperText, password: false, username: false });
-            navigation.navigate('Profile');
-          }
-          else {
-            Toast.show({
-              text1: "Kullanıcı adı veya şifre hatalı",
-              type: 'error'
-
-            })
+            // navigation.navigate('Profile');
+            navigation.dispatch(
+  CommonActions.reset({
+    index: 0,
+    routes: [{ name: 'Profile' }], // yönlendirmek istediğin ana ekran
+  })
+);
           }
         }
-        else {
-          Toast.show({
-            text1: "Sunucu bağlantısı yok",
-            text2: "Sunucu bğlantısı olmadığından giriş yapılamadı",
-            text1Style: { fontSize: 15 },
-            text2Style: { fontSize: 3 },
-            type: 'error'
-          })
-        }
-
       })
     }
   }
 
   const onToggleSwitch = () => {
     setIsSwitchOn(!isSwitchOn)
-    setLogin({ ...login, rememberMe: !isSwitchOn })
+    // setLogin({ ...login, rememberMe: !isSwitchOn })
+    dispatch(loginSlice.actions.rememberMe(isSwitchOn))
   };
-
-  return <SafeAreaProvider>
+  
+  const memo = useMemo(() => {
+      return <SafeAreaProvider>
     <SafeAreaView style={styles.safeAreaView}>
-      <LinearGradient
-        colors={['black', '#3F638C']}
-        style={styles.linearGradient}
+      <KeyboardAvoidingView
+        style={{ flexGrow: 1, width: '100%', height: '100%' }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20} // İsteğe bağlı
       >
-        {screen.status && <Card style={styles.card}>
-          <View style={styles.cardTitle}>
-            <Avatar.Icon size={70} icon="account" />
-          </View>
-          <Card.Content style={styles.CardContent}>
-            <View style={{ flex: 4, justifyContent: 'center', alignItems: 'center' }}>
-              <TextInput
-                style={styles.input}
-                ref={inputRef1}
-                onBlur={() => { setFormHelperText({ ...formHelperText, username: login.userDto.userName === "" ? true : false }) }}
-                mode='outlined'
-                onChangeText={text => {
-                  handleChange(text, "username")
-                }}
-                value={login.userDto.userName}
-                label="Kullanıcı Adı"
-                error={formHelperText.username}
-              />
-              {formHelperText.username && <HelperText type="error" visible={formHelperText.username}> Lütfen Kullanıcı Adı Girin </HelperText>}
-              <TextInput
-                style={styles.input}
-                ref={inputRef2}
-                onBlur={() => { setFormHelperText({ ...formHelperText, password: login.userDto.password === "" ? true : false }) }}
-                mode='outlined'
-                onChangeText={text => {
-                  handleChange(text, "password")
-                }}
-                value={login.userDto.password}
-                label="Şifre"
-                error={formHelperText.password}
-              />
-              {formHelperText.password && <HelperText type="error" visible={formHelperText.password}>Lütfen Şifre Girin</HelperText>}
-            </View>
-            <View style={{ flex: 1, flexWrap: 'wrap' }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', }}>
-                <Switch value={isSwitchOn} onValueChange={onToggleSwitch} color={isSwitchOn ? 'green' : 'red'} thumbColor={isSwitchOn ? 'green' : 'red'} />
-                <Chip style={{ backgroundColor: isSwitchOn ? '#77A97C' : '#E46B6B', marginLeft: 10 }}  >{isSwitchOn ? "Beni Hatırla" : "Unut"}</Chip>
-              </View>
-              <View>
-                <Button onPress={() => {
-                  navigation.navigate('forgotPassword')
-                }}>Şifremi Unuttum</Button>
-              </View>
-            </View>
-          </Card.Content>
-          <View style={styles.cardAction}>
-            <TouchableOpacity>
-              <Button contentStyle={{ width: 200, backgroundColor: '#533285' }} disabled={login.userDto.userName === "" || login.userDto.password === ""} mode='contained' onPress={() => { handleSubmit() }}>Giriş yap</Button>
-            </TouchableOpacity>
-          </View>
-        </Card>}
-      </LinearGradient>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <LinearGradient colors={['black', '#3F638C']} style={styles.linearGradient}>
+            {screen.status && (
+              <Card style={styles.card}>
+                <View style={styles.cardTitle}>
+                  <Avatar.Icon size={70} icon="account" />
+                </View>
+                <Card.Content style={styles.CardContent}>
+                  <View style={{ flex: 4, justifyContent: 'center', alignItems: 'center' }}>
+                    <TextInput
+                      style={styles.input}
+                      // ref={inputRef1}
+                      onBlur={() => setFormHelperText({ ...formHelperText, username: login.userDto.userName === "" })}
+                      mode="outlined"
+                      onChangeText={(text) => handleChange(text, "username")}
+                      value={login.userDto.userName}
+                      label="Kullanıcı Adı"
+                      error={formHelperText.username}
+                    />
+                    {formHelperText.username && (
+                      <HelperText type="error" visible={formHelperText.username}>
+                        Lütfen Kullanıcı Adı Girin
+                      </HelperText>
+                    )}
+                    <TextInput
+                      style={styles.input}
+                      // ref={inputRef2}
+                      onBlur={() => setFormHelperText({ ...formHelperText, password: login.userDto.password === "" })}
+                      mode="outlined"
+                      onChangeText={(text) => handleChange(text, "password")}
+                      value={login.userDto.password}
+                      label="Şifre"
+                      error={formHelperText.password}
+                    />
+                    {formHelperText.password && (
+                      <HelperText type="error" visible={formHelperText.password}>
+                        Lütfen Şifre Girin
+                      </HelperText>
+                    )}
+                  </View>
+                  <View style={{ flex: 1, flexWrap: 'wrap' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Switch
+                        value={isSwitchOn}
+                        onValueChange={onToggleSwitch}
+                        color={isSwitchOn ? 'green' : 'red'}
+                        thumbColor={isSwitchOn ? 'green' : 'red'}
+                      />
+                      <Chip style={{ backgroundColor: isSwitchOn ? '#77A97C' : '#E46B6B', marginLeft: 10 }}>
+                        {isSwitchOn ? 'Beni Hatırla' : 'Unut'}
+                      </Chip>
+                    </View>
+                    <View>
+                      <Button onPress={() => navigation.navigate('forgotPassword')}>Şifremi Unuttum</Button>
+                    </View>
+                  </View>
+
+                </Card.Content>
+                <View style={styles.cardAction}>
+                  <TouchableOpacity>
+                    <Button
+                      loading={loginState.isLoggedIn}
+                      contentStyle={{ width: 200, backgroundColor: '#533285' }}
+                      disabled={login.userDto.userName === "" || login.userDto.password === ""}
+                      mode="contained"
+                      onPress={() => handleSubmit()}
+                    >
+                      Giriş yap
+                    </Button>
+                  </TouchableOpacity>
+                </View>
+              </Card>
+            )}
+          </LinearGradient>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   </SafeAreaProvider>
+  }, [screen,loginState,login,isSwitchOn,formHelperText])
+
+return memo
 }

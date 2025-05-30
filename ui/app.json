@@ -4,20 +4,22 @@
     "slug": "personnel-tracking",
     "version": "1.0.0",
     "orientation": "default",
-    "icon": "./assets/adaptive-icon@2x.png",
+    "icon": "./assets/newicon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "enableBridgeless": false,
+     "jsEngine": "hermes",
     "platforms": ["ios", "android"],
     "splash": {
       "image": "./assets/favicon.png",
-      "resizeMode": "stretch",
+      "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": ".com.yeer.PersonnelTracking",
-      "requireFullScreen": true
+      "requireFullScreen": true,
+       "jsEngine": "jsc"
     },
     "android": {
       "config": {
@@ -26,7 +28,7 @@
         }
       },
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon@2x.png",
+        "foregroundImage": "./assets/newicon.png",
         "resizeMode":"cover",
         "backgroundColor": "#ffffff"
       },

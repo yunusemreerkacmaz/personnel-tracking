@@ -6,14 +6,11 @@ import { useFocusEffect } from '@react-navigation/native';
 import { DeviceDto } from './Dtos/DeviceDto';
 import Toast from 'react-native-toast-message';
 import { getDistinctDevices, UpdateDevice } from './Requests/deviceInfoStore';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DeviceTokenEnum } from '../../Enums/JwtTokenEnum';
-import { useDispatch } from 'react-redux';
-import { AppDispatch } from '../../Store/store';
-import { barcodeSlice } from '../Barcode/Requests/barcodeSlice';
-import { initialBarcodeState } from '../Barcode/Dtos/barcodeDto';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../Store/store';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { ToastShowParamsCustomType } from '../../Helpers/Toast/ToastDto';
+import { iconVisibleStatus } from '../EntryExit/Requests/entryExitSlice';
 
 export default function DistinctDevice() {  // Cihaz Onayla 
     const [search, setSearch] = React.useState('');
@@ -79,6 +76,8 @@ type DeviceItemProps = { deviceDto: DeviceDto, index: number, approvedStatus: bo
 const DeviceItem: React.FC<DeviceItemProps> = ({ deviceDto, index, setApprovedStatus, approvedStatus }) => {
     const dispatch = useDispatch<AppDispatch>()
     const [modalVisible, setModalVisible] = useState(false);
+  const entryExitState = useSelector((state: RootState) => state.entryExit)
+
 
     const handleUpdateDevice = async (value: boolean) => {
         Toast.show({
@@ -99,14 +98,11 @@ const DeviceItem: React.FC<DeviceItemProps> = ({ deviceDto, index, setApprovedSt
                     const updateDevice = await UpdateDevice(deviceDto)
                     if (updateDevice?.responseStatus === ResponseStatus.IsSuccess) {
                         setApprovedStatus(!approvedStatus)
-                        dispatch(barcodeSlice.actions.barcodeVisible({ ...initialBarcodeState, qrCodeVisibleState: false }))
+                        dispatch(iconVisibleStatus({ ...entryExitState, biometricIconVisible: false,qrCodeIconVisible:false }))
                         Toast.show({ text1: "Cihaz Onayı", text2: updateDevice.responseMessage })
-                        await AsyncStorage.removeItem(DeviceTokenEnum.key).then(async () => {
-                            await AsyncStorage.setItem(DeviceTokenEnum.key, deviceDto.deviceToken)
-                        })
                     }
                     else {
-                        dispatch(barcodeSlice.actions.barcodeVisible({ ...initialBarcodeState, qrCodeVisibleState: true }))
+                        dispatch(iconVisibleStatus({ ...entryExitState, biometricIconVisible:true,qrCodeIconVisible: true }))
                         Toast.show({ text1: "Cihaz Onayı", text2: updateDevice?.responseMessage })
                         setApprovedStatus(!approvedStatus)
                     }
@@ -168,8 +164,8 @@ const DistinctDeviceInformationModal: React.FC<DistrinctDeviceInfoProps> = ({ mo
             margin: 20,
             backgroundColor: 'white',
             borderRadius: 20,
-            width: '85%',
-            height: 300,
+            width: '100%',
+            height: 350,
             maxHeight: '100%',
             flexShrink: 1,
             flexWrap: 'wrap',
@@ -219,45 +215,45 @@ const DistinctDeviceInformationModal: React.FC<DistrinctDeviceInfoProps> = ({ mo
                                 <Chip mode='outlined' style={{ flex: 1 }}>
                                     <View style={{ gap: 20, height: '100%' }}>
                                         <View style={{ flexDirection: 'row' }}>
-                                            <View style={{ width: '45%' }}>
+                                            <View style={{ width: '50%' }}>
                                                 <Text style={styles.textStyle}>Adı Soyadı</Text>
                                             </View>
-                                            <View style={{ width: '55%' }}>
+                                            <View style={{ width: '50%' }}>
                                                 <Text>{` :  ${deviceDto.userDto.firstName ? deviceDto.userDto.firstName : "İsim Yok"} ${deviceDto.userDto.lastName ? deviceDto.userDto.lastName : "Soyadı Yok"}`}</Text>
                                             </View>
                                         </View>
                                         <View style={{ flexDirection: 'row' }}>
-                                            <View style={{ width: '45%' }}>
+                                            <View style={{ width: '50%' }}>
                                                 <Text style={styles.textStyle}>Eski Cihaz Markası</Text>
                                             </View>
-                                            <View style={{ width: '55%', }}>
+                                            <View style={{ width: '50%', }}>
                                                 <Text>{` :  ${deviceDto.deviceBrand ? deviceDto.deviceBrand : "Yok"}`}</Text>
                                             </View>
                                         </View>
 
                                         <View style={{ flexDirection: 'row' }}>
-                                            <View style={{ width: '45%' }}>
+                                            <View style={{ width: '50%' }}>
                                                 <Text style={styles.textStyle}>Eski Cihaz Modeli</Text>
                                             </View>
-                                            <View style={{ width: '55%', }}>
+                                            <View style={{ width: '50%', }}>
                                                 <Text>{` :  ${deviceDto.deviceModelName ? deviceDto.deviceModelName : "Yok"}`}</Text>
                                             </View>
                                         </View>
 
                                         <View style={{ flexDirection: 'row' }}>
-                                            <View style={{ width: '45%' }}>
+                                            <View style={{ width: '50%' }}>
                                                 <Text style={styles.textStyle}>Yeni Cihaz Markası</Text>
 
                                             </View>
-                                            <View style={{ width: '55%' }}>
+                                            <View style={{ width: '50%' }}>
                                                 <Text>{` :  ${deviceDto.distinctDeviceBrand ? deviceDto.distinctDeviceBrand : "Yok"}`}</Text>
                                             </View>
                                         </View>
                                         <View style={{ flexDirection: 'row' }}>
-                                            <View style={{ width: '45%' }}>
+                                            <View style={{ width: '50%' }}>
                                                 <Text style={styles.textStyle}>Yeni Cihaz Modeli</Text>
                                             </View>
-                                            <View style={{ width: '55%' }}>
+                                            <View style={{ width: '50%' }}>
                                                 <Text>{` :  ${deviceDto.distinctDeviceModelName ? deviceDto.distinctDeviceModelName : "Yok"}`}</Text>
                                             </View>
                                         </View>

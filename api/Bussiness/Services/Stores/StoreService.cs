@@ -168,6 +168,7 @@ namespace Bussiness.Services.Stores
                 store.Latitude = storeDto.StoreLocation.Latitude;
                 store.Radius = storeDto.Radius;
                 store.UpdateTime = DateTime.Now;
+                store.IsActive = storeDto.IsActive;
                 var updateStatus = await _storeDal.UpdateAsync(store);
                 if (updateStatus)
                 {

@@ -22,52 +22,6 @@ namespace DataAccess.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
-            modelBuilder.Entity("Entity.Barcode", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ApprovingAuthorityId")
-                        .HasColumnType("int");
-
-                    b.Property<bool?>("AreaControl")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<int?>("DeviceId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<bool?>("Entreance")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool?>("Exit")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<double?>("Latitude")
-                        .HasColumnType("double");
-
-                    b.Property<double?>("Longtitude")
-                        .HasColumnType("double");
-
-                    b.Property<int?>("RoleId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("StartDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Barcodes");
-                });
-
             modelBuilder.Entity("Entity.Device", b =>
                 {
                     b.Property<int>("Id")
@@ -112,6 +66,58 @@ namespace DataAccess.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Devices");
+                });
+
+            modelBuilder.Entity("Entity.EntryExitRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ApprovingAuthorityId")
+                        .HasColumnType("int");
+
+                    b.Property<bool?>("AreaControl")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int?>("DeviceId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("EntranceActionType")
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("Entreance")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("Exit")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("ExitActionType")
+                        .HasColumnType("longtext");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double");
+
+                    b.Property<double?>("Longtitude")
+                        .HasColumnType("double");
+
+                    b.Property<int?>("RoleId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("EntryExitRecords");
                 });
 
             modelBuilder.Entity("Entity.ForgottenPassword", b =>
@@ -223,6 +229,59 @@ namespace DataAccess.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Roles");
+                });
+
+            modelBuilder.Entity("Entity.ShiftPlan", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CreateTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DeleteTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Friday")
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<string>("IsDeleted")
+                        .IsRequired()
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<string>("Monday")
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<string>("Saturday")
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<string>("Sunday")
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<string>("Thursday")
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<string>("TotalTime")
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<string>("Tuesday")
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<DateTime?>("UpdateTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Wednesday")
+                        .HasColumnType("varchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ShiftPlans");
                 });
 
             modelBuilder.Entity("Entity.Store", b =>

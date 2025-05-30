@@ -4,7 +4,7 @@ import { Button, Card, Chip, List, Searchbar,Text } from 'react-native-paper'
 import Toast from 'react-native-toast-message'
 import { ToastShowParamsCustomType } from '../../../Helpers/Toast/ToastDto'
 import { UserBarcodeLoginDto } from './Dtos/userBarcodeLogin'
-import { GetBarcodeUserLogoutService, UpdateBarcodeUser } from './Requests/AdminBarcodeStore'
+import { GetEntryExitUserLogout, UpdateEntryExitUser } from './Requests/AdminBarcodeStore'
 import { ResponseStatus } from '../../../ServiceResults/serviceResult'
 import { useFocusEffect } from '@react-navigation/native'
 
@@ -18,7 +18,7 @@ export default function UserLoginComponent() {
     useCallback(
       () => {
         const userBarcodeLogoutAsync = async () => {
-          let getBarcodeUsers = await GetBarcodeUserLogoutService()
+          let getBarcodeUsers = await GetEntryExitUserLogout()
           if (getBarcodeUsers?.responseStatus === ResponseStatus.IsSuccess) {
             setUsers(getBarcodeUsers.results)
             setSearchUsers(getBarcodeUsers.results)
@@ -52,7 +52,7 @@ export default function UserLoginComponent() {
 
   return (
       <Card style={{ flex:1, elevation: 24, backgroundColor: '#E7C5BC' }}>
-        <Card.Title subtitleStyle={{ color: 'gray' }} titleStyle={{ fontWeight: 'bold', color: 'black' }} title="KULLANICI GİRİŞİ ONAYLAMA ALANI" subtitle="Girişinin onaylanmasını istediğiniz kişiyi seçin" />
+        <Card.Title subtitleStyle={{ color: 'gray' }} titleStyle={{ fontWeight: 'bold', color: 'black' }} title="KULLANICI ÇIKIŞI ONAYLAMA ALANI" subtitle="Çıkışının onaylanmasını istediğiniz kişiyi seçin" />
           {
             searchUsers?.length === 0 ?
               <View style={{ height:'100%',justifyContent: 'center', alignItems: 'center' }}>
@@ -96,7 +96,7 @@ const UserLoginItem: React.FC<UserBarcodeLoginProps> = ({ userDto, index, crudSt
         },
         onOkPress: async () => {
           userDto = { ...userDto, isApproval: value }
-          const responseUpdateBarcodeUser = await UpdateBarcodeUser(userDto)
+          const responseUpdateBarcodeUser = await UpdateEntryExitUser(userDto)
           if (responseUpdateBarcodeUser?.responseStatus === ResponseStatus.IsSuccess) {
             Toast.show({ text1: "Çıkış Onayı", text2: responseUpdateBarcodeUser?.responseMessage })
             setCrudStatus(!crudStatus)

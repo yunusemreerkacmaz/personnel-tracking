@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { initialLocationDto, initialLocationSliceDto } from "./Dtos/locationDto";
+import { initialLocationSliceDto } from "./Dtos/locationDto";
 import { locationStore } from "./Requests/locationStore";
 
 export const locationSlice = createSlice({

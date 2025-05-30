@@ -4,7 +4,7 @@ import { Button, Card, List, Searchbar } from 'react-native-paper'
 import Toast from 'react-native-toast-message'
 import { ToastShowParamsCustomType } from '../../../Helpers/Toast/ToastDto'
 import { UserBarcodeLoginDto } from './Dtos/userBarcodeLogin'
-import { GetBarcodeUserLoginService, UpdateBarcodeUser } from './Requests/AdminBarcodeStore'
+import { GetEntryExitUserLogin, UpdateEntryExitUser } from './Requests/AdminBarcodeStore'
 import { ResponseStatus } from '../../../ServiceResults/serviceResult'
 import { useFocusEffect } from '@react-navigation/native'
 
@@ -18,7 +18,7 @@ export default function UserLoginComponent() {
         useCallback(
             () => {
                 const userBarcodeLoginAsync = async () => {
-                    let getBarcodeUsers = await GetBarcodeUserLoginService()
+                    let getBarcodeUsers = await GetEntryExitUserLogin()
                     if (getBarcodeUsers?.responseStatus === ResponseStatus.IsSuccess) {
                         setUsers(getBarcodeUsers.results)
                         setSearchUsers(getBarcodeUsers.results)
@@ -94,7 +94,7 @@ const UserLoginItem: React.FC<UserBarcodeLoginProps> = ({ userDto, index, crudSt
                 },
                 onOkPress: async () => {
                     userDto = { ...userDto, isApproval: value }
-                    const responseUpdateBarcodeUser = await UpdateBarcodeUser(userDto)
+                    const responseUpdateBarcodeUser = await UpdateEntryExitUser(userDto)
                     if (responseUpdateBarcodeUser?.responseStatus === ResponseStatus.IsSuccess) {
                         Toast.show({ text1: "Giriş Onayı", text2: responseUpdateBarcodeUser?.responseMessage })
                         setCrudStatus(!crudStatus)

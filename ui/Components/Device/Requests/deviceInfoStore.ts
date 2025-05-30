@@ -1,7 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import * as Device from "expo-device";
 import { getApiUrl } from "../../../Helpers/Helper";
-import { AxiosHeaders, AxiosResponse } from "axios";
+import { AxiosResponse } from "axios";
 import { ServiceResult } from "../../../ServiceResults/serviceResult";
 import Toast from "react-native-toast-message";
 import { DeviceDto } from "../Dtos/DeviceDto";
@@ -78,9 +78,6 @@ export const CheckDevice = async (deviceDto: DeviceDto) => {
     try {
         const { axiosInstance } = await getApiUrl()
         let deviceToken = await AsyncStorage.getItem(DeviceTokenEnum.key)
-
-        console.log("deviceToken ======= ",deviceToken);
-        
         const response: AxiosResponse<ServiceResult<DeviceDto>> = await axiosInstance.post(`Device/CheckDevice`,deviceDto,{
             headers:{[DeviceTokenEnum.key]:deviceToken,
                 'Content-Type': 'application/json'
@@ -100,21 +97,3 @@ export const CheckDevice = async (deviceDto: DeviceDto) => {
         })
     }
 }
-
-// export const deviceStore = createAsyncThunk(
-//     "Device/GetApprovedUser",
-//     async (_, thunkAPI) => {
-//         const { axiosInstance } = await getApiUrl()
-//         try {
-//             const response: AxiosResponse<ServiceResult<DeviceDto>> = await axiosInstance.get(`Device/GetApprovedUser`);
-//             return response.data; // Backend'den gelen yanıt
-//         } catch (error: any) {
-//             Toast.show({
-//                 text1: 'DeviceAsync Hatası',
-//                 text2: "DeviceAsync Sunucu hatası",
-//                 type: 'error',
-//             })
-//             return thunkAPI.rejectWithValue(error.response?.data || error.message);
-//         }
-//     }
-// );

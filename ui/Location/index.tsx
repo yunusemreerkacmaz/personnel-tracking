@@ -17,7 +17,7 @@ export default function LocationComponent() {
   const [reloadLocation, setReloadLocation] = useState(false) // tekrar konum arama
   const [expanded, setExpanded] = React.useState(false);
   const locationState = useSelector((state: RootState) => state.location)
-  const barcodeState = useSelector((state: RootState) => state.barcode)
+  const entryExitState = useSelector((state: RootState) => state.entryExit)
 
   useEffect(() => {
     async function getCurrentLocation() {
@@ -41,7 +41,7 @@ export default function LocationComponent() {
 
       let address = await reverseGeocodeAsync({ latitude: location.coords.latitude, longitude: location.coords.longitude })
       let locationSliceDto: LocationSliceDto = {
-        areaControl: barcodeState.locationDto.areaControl ?? false,
+        areaControl: entryExitState.locationDto.areaControl ?? false,
         coords: location.coords,
         mocked: location.mocked,
         timestamp: location.timestamp,
@@ -133,16 +133,3 @@ export default function LocationComponent() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  paragraph: {
-    fontSize: 18,
-    textAlign: 'center',
-  },
-});

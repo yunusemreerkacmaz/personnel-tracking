@@ -31,32 +31,32 @@ namespace personnel_tracking_api.Controllers
             var addedUser = await _userService.UpdateUser(userDto);
             return addedUser;
         }
-        [HttpPost("DeleteUsers")]
-        public async Task<ServiceResult<DeleteUsersDto>> DeleteUsers([FromBody] List<DeleteUsersDto> deleteUsersDtos)
+        //[HttpPost("DeleteUsers")]
+        //public async Task<ServiceResult<DeleteUsersDto>> DeleteUsers([FromBody] List<DeleteUsersDto> deleteUsersDtos)
+        //{
+        //    var deletedUsers = await _userService.DeleteUsers(deleteUsersDtos);
+        //    return deletedUsers;
+        //}
+        [Authorize(Roles ="Admin")]  // Admin Id
+        [HttpGet("GetEntryExitUserLogin")]
+        public async Task<ServiceResult<UserEntryExitLoginDto>> GetEntryExitUserLogin()
         {
-            var deletedUsers = await _userService.DeleteUsers(deleteUsersDtos);
-            return deletedUsers;
-        }
-        [Authorize(Roles ="Admin")]
-        [HttpGet("GetBarcodeUserLoginService")]
-        public async Task<ServiceResult<UserBarcodeLoginDto>> GetBarcodeUserLogin()
-        {
-            var getBarcodeUsers = await _userService.GetBarcodeUserLoginService();
+            var getBarcodeUsers = await _userService.GetEntryExitUserLoginService();
             return getBarcodeUsers;
         }
 
-        [Authorize(Roles = "Admin")]
-        [HttpGet("GetBarcodeUserLogoutService")]
-        public async Task<ServiceResult<UserBarcodeLoginDto>> GetBarcodeUserLogout()
+        [Authorize(Roles = "Admin")]  // Admin Id
+        [HttpGet("GetEntryExitUserLogout")]
+        public async Task<ServiceResult<UserEntryExitLoginDto>> GetEntryExitUserLogoutService()
         {
-            var getBarcodeUsers = await _userService.GetBarcodeUserLogoutService();
+            var getBarcodeUsers = await _userService.GetEntryExitUserLogoutService();
             return getBarcodeUsers;
-        }
-        [Authorize(Roles = "Admin")]
-        [HttpPost("UpdateBarcodeUser")]
-        public async Task<ServiceResult<UserBarcodeLoginDto>> UpdateBarcodeUser([FromBody] UserBarcodeLoginDto userDto)
+        } 
+        [Authorize(Roles = "Admin")]  // Admin Id
+        [HttpPost("UpdateEntryExitUser")]
+        public async Task<ServiceResult<UserEntryExitLoginDto>> UpdateEntryExitUser([FromBody] UserEntryExitLoginDto userDto)
         {
-            var addedUser = await _userService.UpdateBarcodeUserService(userDto);
+            var addedUser = await _userService.UpdateEntryExitUserService(userDto);
             return addedUser;
         }
 

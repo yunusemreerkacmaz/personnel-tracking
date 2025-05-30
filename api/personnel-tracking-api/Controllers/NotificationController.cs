@@ -1,10 +1,7 @@
 ﻿using Bussiness.ServiceResults;
-using Bussiness.Services.BarcodeService.Dtos;
 using Bussiness.Services.NotificationService;
 using Bussiness.Services.NotificationService.Dtos;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Net.WebSockets;
 
 namespace personnel_tracking_api.Controllers
 {

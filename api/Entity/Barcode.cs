@@ -2,7 +2,7 @@
 using Entity.HelperEntity;
 namespace Entity
 {
-    public class Barcode:DateRangeEntity,IEntity
+    public class Barcode : DateRangeEntity, IEntity
     {
         public int Id { get; set; }
         public bool? Entreance { get; set; }
@@ -15,5 +15,6 @@ namespace Entity
         public int? RoleId { get; set; }
         public int? DeviceId { get; set; }
         public int ApprovingAuthorityId { get; set; }  // Barcode Girişini onaylayan yetkili Id
+        public Guid? EntranceOrExitId { get; set; } // Girişe yada çıkışa ait bir Id(barkod ile giriş yapmışsa biyometrik ile çıkış yapmışsa yada tam tersi ise bu id ikisinde de aynı olacak) giriş yaptığı anda eklenmeli
     }
 }

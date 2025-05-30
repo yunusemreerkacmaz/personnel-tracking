@@ -3,13 +3,12 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import LoginComponent from '../Components/Login/login';
 import HomeComponent from '../Components/Home/home';
 import ProfileComponent from '../Components/Profil/profil';
-import { ActivityIndicator, Avatar, Badge, IconButton, MD2Colors, Text } from 'react-native-paper';
+import { ActivityIndicator, Avatar, Badge, IconButton, MD2Colors, MD3Colors, Text } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../Store/store';
 import { View, Image, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import BarcodeComponent from '../Components/Barcode/camera'
-import { BarcodeReadEnum } from '../Enums/barcodeStatusEnum';
+import BarcodeComponent from '../Components/EntryExit/barcode'
 import { GenderEnum } from '../Enums/GenderEnum';
 import RoleComponent from '../Components/Admin/AddRole';
 import UserComponent from '../Components/Admin/index';
@@ -27,6 +26,10 @@ import LogoutComponent from '../Components/Login/logout';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { screenOrientationStore } from '../Helpers/Screen/screenStore';
 import AdminBarcodeIndex from '../Components/Admin/Barcode';
+import BiometricComponent from '../Components/EntryExit/biometric';
+import { EntryExitEnum } from '../Enums/EntryExitEnum';
+import ContactComponent from '../Components/Contacts';
+import ShiftPlanComponent from '../Components/ShiftPlan';
 
 export type DrawerParamList = {
     Profile: undefined;
@@ -41,15 +44,18 @@ export type DrawerParamList = {
     Location: undefined
     Device: undefined
     logout: undefined
-    AdminBarcodeApproval:undefined
+    AdminBarcodeApproval: undefined
+    biometric: undefined
+    contacts: undefined
+    shiftPlan: undefined
 };
-type NavigationProps = DrawerNavigationProp<DrawerParamList>;
+export type NavigationProps = DrawerNavigationProp<DrawerParamList>;
 
 export default function Navigator() {
     const Drawer = createDrawerNavigator<DrawerParamList>();
     const navigationCamera = useNavigation<NavigationProps>();
     const loginState = useSelector((state: RootState) => state.login)
-    const barcodeState = useSelector((state: RootState) => state.barcode)
+    const entryExitState = useSelector((state: RootState) => state.entryExit)
     const dispatch = useDispatch<AppDispatch>()
     const [visible, setvisible] = useState(true)
     const [visibleNotification, setVisibleNotification] = React.useState(false);
@@ -193,6 +199,24 @@ export default function Navigator() {
         );
     }
 
+
+    const handleIconColor = () => {
+        if (entryExitState.barcodeReadEnum || entryExitState.biometricEnum || entryExitState.adminApproveEnum) {
+            if ((entryExitState.barcodeReadEnum === EntryExitEnum.Entreance && entryExitState.biometricEnum === EntryExitEnum.Exit) || (entryExitState.barcodeReadEnum === EntryExitEnum.Exit && entryExitState.biometricEnum === EntryExitEnum.Entreance)) {
+                return "red"
+            }
+            else if (entryExitState.barcodeReadEnum === EntryExitEnum.Entreance || entryExitState.biometricEnum === EntryExitEnum.Entreance || entryExitState.adminApproveEnum) {
+                return "green"
+            }
+            else if (entryExitState.barcodeReadEnum === EntryExitEnum.Exit || entryExitState.biometricEnum === EntryExitEnum.Exit || entryExitState.adminApproveEnum === EntryExitEnum.Exit) {
+                return "red"
+            }
+            else {
+                return "#ECB125"
+            }
+        }
+    }
+
     useEffect(() => {
         let handleWebsocket = async () => {
             if (loginState.userDto.id === 1) {
@@ -236,7 +260,7 @@ export default function Navigator() {
                         {loadingNotification ? <Loading /> : <Badge style={{ position: 'absolute', top: 12, left: 36, zIndex: 9999 }}>{websocket.messages.filter(x => !x.readStatus).length}</Badge>}
                         <IconButton
                             icon={"cellphone-message"}    // Notification ikonu 
-                            size={36}
+                            size={30}
                             mode='contained'
                             containerColor='white'
                             onPress={() => {
@@ -252,26 +276,33 @@ export default function Navigator() {
             }}>
                 <IconButton
                     icon="qrcode-scan"
-                    iconColor={barcodeState.barcodeReadEnum && barcodeState.barcodeReadEnum === BarcodeReadEnum.Entreance ? "red" : "green"}
-                    size={36}
-                    disabled={barcodeState.qrCodeVisibleState}
-                    // style={{ marginRight: 10 }}
-                    mode='contained'
-                    containerColor='white'
+                    iconColor={handleIconColor()}
+                    size={30}
+                    disabled={entryExitState.qrCodeIconVisible}
                     onPress={() => {
                         navigationCamera.navigate('Barkod')
                         setvisible(false)
                     }}
                 />
             </View>
+            <IconButton
+                icon="fingerprint"
+                iconColor={handleIconColor()}
+                size={30}
+                disabled={entryExitState.biometricIconVisible}
+
+                onPress={() => {
+                    navigationCamera.navigate('biometric', { trigger: true } as any)
+                }}
+            />
         </View>
-    }, [barcodeState, navigationCamera, websocket.messages, visibleNotification, loginState.userDto.id, loadingNotification])
+    }, [navigationCamera, websocket.messages, visibleNotification, loginState.userDto.id, loadingNotification, entryExitState])
 
     const Content = (props: any) => {
         const navigation = props.navigation as DrawerNavigationProp<DrawerParamList>;
         return <View style={{ flex: 1, width: '100%', }}>
-            <View style={{ flex: 3, width: '100%', justifyContent: 'center', alignItems: 'center', borderBottomWidth: 1, borderColor: '#dcdcdc', flexWrap: 'wrap',paddingTop:10 }}>
-                <View style={{ flex: 3, justifyContent: 'center', alignItems: 'center', width: '100%',height:'100%'}}>
+            <View style={{ flex: 3, width: '100%', justifyContent: 'center', alignItems: 'center', borderBottomWidth: 1, borderColor: '#dcdcdc', flexWrap: 'wrap', paddingTop: 10 }}>
+                <View style={{ flex: 3, justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}>
                     <Image source={loginState.userDto.gender === GenderEnum.Man ? require('../assets/user_man_icon.png') : loginState.userDto.gender === GenderEnum.Woman ? require('../assets/user_woman_icon.png') : ""}
                         style={{
                             width: screenOrientation.isPortrait ? 150 : 90,
@@ -281,7 +312,7 @@ export default function Navigator() {
                         }}
                     />
                 </View>
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center',  }}>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', }}>
                     <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 5, color: 'black' }}>{`${loginState.userDto.firstName} ${loginState.userDto.lastName} `}</Text>
                 </View>
             </View>
@@ -303,6 +334,12 @@ export default function Navigator() {
                         onPress={() => navigation.navigate('Profile')}
                     >
                     </DrawerItem>
+                    <DrawerItem
+                        label={"Vardiya Planı"}
+                        style={{ backgroundColor: '#D7EBD3', marginBottom: 10 }}
+                        icon={() => <Avatar.Icon size={27} icon="card-bulleted-settings" />}
+                        onPress={() => navigation.navigate('shiftPlan')}
+                    ></DrawerItem>
                     {isAdmin &&
                         <>
                             <DrawerItem
@@ -324,6 +361,7 @@ export default function Navigator() {
                     }
                     {(isAdmin || isStoreAdmin) &&
                         <>
+
                             <DrawerItem
                                 label={"Kullanıcı İşlemleri"}
                                 style={{ backgroundColor: '#D7EBD3', marginBottom: 10 }}
@@ -338,12 +376,18 @@ export default function Navigator() {
                                 onPress={() => navigation.navigate('Device')}
                             >
                             </DrawerItem>
-
                             <DrawerItem
                                 label={"Giriş Çıkış İşlemleri"}
                                 style={{ backgroundColor: '#D7EBD3', marginBottom: 10 }}
-                                icon={() => <Avatar.Icon size={27} icon="devices" />}
+                                icon={() => <Avatar.Icon size={27} icon="door-sliding-open" />}
                                 onPress={() => navigation.navigate('AdminBarcodeApproval')}
+                            >
+                            </DrawerItem>
+                            <DrawerItem
+                                label={"İletişim"}
+                                style={{ backgroundColor: '#D7EBD3', marginBottom: 10 }}
+                                icon={() => <Avatar.Icon size={27} icon="contacts" />}
+                                onPress={() => navigation.navigate('contacts')}
                             >
                             </DrawerItem>
                         </>
@@ -375,12 +419,18 @@ export default function Navigator() {
             <Drawer.Screen
                 name="Home"
                 component={HomeComponent}
-                options={{ drawerStyle: { width: 250, }, title: 'Anasayfa' }}
+                options={{
+                    drawerStyle: { width: 250, }, title: 'Anasayfa',
+                    headerTitleStyle: { fontSize: 15 }
+                }}
             />
             <Drawer.Screen
                 name="Profile"
                 component={ProfileComponent}
-                options={{ drawerStyle: { width: 250 }, title: 'Profilim' }}
+                options={{
+                    drawerStyle: { width: 250 }, title: 'Profilim',
+                    headerTitleStyle: { fontSize: 15 }
+                }}
             />
             <Drawer.Screen
                 name="login"
@@ -392,7 +442,8 @@ export default function Navigator() {
                 component={BarcodeComponent}
                 options={{
                     drawerStyle: { width: 250 },
-                    headerShown: visible
+                    headerShown: visible,
+                    headerTitleStyle: { fontSize: 15 }
                 }}
             />
             <Drawer.Screen
@@ -401,7 +452,8 @@ export default function Navigator() {
                 options={{
                     drawerStyle: { width: 250 },
                     headerShown: true,
-                    title: 'Yetki İşlemleri'
+                    title: 'Yetki İşlemleri',
+                    headerTitleStyle: { fontSize: 15 }
                 }}
             />
             <Drawer.Screen
@@ -410,7 +462,8 @@ export default function Navigator() {
                 options={{
                     drawerStyle: { width: 250 },
                     headerShown: screenOrientation.isPortrait,
-                    title: "Kullanıcı İşlemleri"
+                    title: "Kullanıcı İşlemleri",
+                    headerTitleStyle: { fontSize: 15 }
                 }}
             />
             <Drawer.Screen
@@ -419,6 +472,7 @@ export default function Navigator() {
                 options={{
                     drawerStyle: { width: 250 },
                     headerShown: false,
+                    headerTitleStyle: { fontSize: 15 }
                 }}
             />
             <Drawer.Screen
@@ -427,7 +481,8 @@ export default function Navigator() {
                 options={{
                     drawerStyle: { width: 250 },
                     headerShown: screenOrientation.isPortrait,
-                    title: 'Kurum İşlemleri'
+                    title: 'Kurum İşlemleri',
+                    headerTitleStyle: { fontSize: 15 }
                 }}
             />
             <Drawer.Screen
@@ -436,16 +491,48 @@ export default function Navigator() {
                 options={{
                     drawerStyle: { width: 250 },
                     headerShown: screenOrientation.isPortrait,
-                    title: 'Cihaz İşlemleri'
+                    title: 'Cihaz İşlemleri',
+                    headerTitleStyle: { fontSize: 15 }
                 }}
             />
-              <Drawer.Screen
+            <Drawer.Screen
                 name="AdminBarcodeApproval"
                 component={AdminBarcodeIndex}
                 options={{
                     drawerStyle: { width: 250 },
                     headerShown: screenOrientation.isPortrait,
-                    title:"Giriş Çıkış İşlemleri"
+                    title: "Giriş Çıkış İşlemleri",
+                    headerTitleStyle: { fontSize: 15 }
+                }}
+            />
+            <Drawer.Screen
+                name="biometric"
+                component={BiometricComponent}
+                options={{
+                    drawerStyle: { width: 250 },
+                    headerShown: screenOrientation.isPortrait,
+                    headerTitleStyle: { fontSize: 15 },
+                    title: ""
+                }}
+            />
+            <Drawer.Screen
+                name="contacts"
+                component={ContactComponent}
+                options={{
+                    drawerStyle: { width: 250 },
+                    headerShown: screenOrientation.isPortrait,
+                    headerTitleStyle: { fontSize: 15 },
+                    title: "İletişim"
+                }}
+            />
+            <Drawer.Screen
+                name="shiftPlan"
+                component={ShiftPlanComponent}
+                options={{
+                    drawerStyle: { width: 250 },
+                    headerShown: screenOrientation.isPortrait,
+                    headerTitleStyle: { fontSize: 15 },
+                    title: "Vardiya"
                 }}
             />
             <Drawer.Screen
@@ -453,7 +540,8 @@ export default function Navigator() {
                 component={LogoutStack}
                 options={{
                     drawerStyle: { width: 250 },
-                    headerShown: false
+                    headerShown: false,
+                    headerTitleStyle: { fontSize: 15 }
                 }}
             />
         </Drawer.Navigator>

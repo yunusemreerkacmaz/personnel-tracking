@@ -5,99 +5,134 @@ import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { DrawerParamList } from '../../Navigator/navigator';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../Store/store';
-import { BarcodeDto } from '../Barcode/Dtos/barcodeDto';
 import { ResponseStatus, ServiceResult } from '../../ServiceResults/serviceResult';
 import Toast from 'react-native-toast-message';
 import { ActivityIndicator, Avatar, Card, Chip, DataTable, DefaultTheme, Icon, List, MD2Colors, MD3Colors } from 'react-native-paper';
-import { BarcodeReadEnum, InputOrOutStatus } from '../../Enums/barcodeStatusEnum';
+import {  InputOrOutStatus } from '../../Enums/EntryExitEnum';
 import { LinearGradient } from 'expo-linear-gradient';
 import { deviceInfoStore, CheckDevice } from '../Device/Requests/deviceInfoStore';
 import { ScrollView } from 'react-native-gesture-handler';
 import LocationComponent from '../../Location';
 import { initialDeviceInformationDto } from '../Device/Dtos/DeviceInformationDto';
 import { GenderEnum } from '../../Enums/GenderEnum';
-import { barcodeCheckStore } from '../Barcode/Requests/barcodeStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DeviceTokenEnum } from '../../Enums/JwtTokenEnum';
 import { DeviceDto } from '../Device/Dtos/DeviceDto';
-import { barcodeSlice } from '../Barcode/Requests/barcodeSlice';
+import { EntryExitEnum } from '../../Enums/EntryExitEnum';
+import { entryExitCheckStore } from '../EntryExit/Requests/entryExitStore';
+import { EntryExitDto } from '../EntryExit/Dtos/EntryExitDto';
+import { iconVisibleStatus } from '../EntryExit/Requests/entryExitSlice';
 
 export default function ProfileComponent() {
-
   type NavigationProps = DrawerNavigationProp<DrawerParamList, 'Home', 'Profile'>;
   const navigation = useNavigation<NavigationProps>();
   const dispatch = useDispatch<AppDispatch>()
   const loginState = useSelector((state: RootState) => state.login)
-  const barcodeState = useSelector((state: RootState) => state.barcode)
   const deviceInfoState = useSelector((state: RootState) => state.deviceInfo)
   const [expanded, setExpanded] = React.useState(false);
   const locationState = useSelector((state: RootState) => state.location)
+  const entryExitState = useSelector((state: RootState) => state.entryExit)
+
   const handleExpand = () => setExpanded(!expanded);
 
-  const handleBarcodeCheck = async () => {
-    let barcode: BarcodeDto = {
+  const handleEntryExitCheck = async () => {
+    let barcode: EntryExitDto = {
+      id: entryExitState.id,
+      userId: loginState.userDto.id,
+      roleId: loginState.roleDto.id,
+      deviceId: entryExitState.deviceId,
       locationDto: { latitude: locationState.coords.latitude, longitude: locationState.coords.latitude, areaControl: locationState.areaControl },
-      barcodeReadEnum: BarcodeReadEnum.Default,
-      data: "",
-      id: barcodeState.id,
-      loginDto: loginState,
-      storeDto: barcodeState.storeDto,
-      loading: barcodeState.loading,
-      deviceId: barcodeState.deviceId,
-      qrCodeVisibleState: barcodeState.qrCodeVisibleState
+      barcodeReadEnum: entryExitState.barcodeReadEnum,
+      biometricEnum: entryExitState.biometricEnum,
+      biometricIconVisible: entryExitState.biometricIconVisible,
+      qrCodeIconVisible: entryExitState.qrCodeIconVisible,
+      isUserCompleteShift:entryExitState.isUserCompleteShift,
+      status: entryExitState.status,
+      adminApproveEnum:entryExitState.adminApproveEnum
     }
-    if (locationState.coords.latitude && locationState.coords.longitude && deviceInfoState != initialDeviceInformationDto) {
-      dispatch(barcodeCheckStore(barcode)).then(response => {
-        const payload = response.payload as ServiceResult<BarcodeDto>;
-        if (payload.responseStatus === ResponseStatus.IsWarning && payload.result.barcodeReadEnum == BarcodeReadEnum.Default) {
-          Toast.show({
-            text1: payload.responseMessage,
-            text1Style: { backgroundColor: 'green' },
-            type: 'success'
-          })
-        }
-      })
+
+    dispatch(entryExitCheckStore(barcode)).then(response => {
+      const payload = response.payload as ServiceResult<EntryExitDto>;
+      if (payload.responseStatus === ResponseStatus.IsWarning && payload.result.barcodeReadEnum == EntryExitEnum.Default) {
+        Toast.show({
+          text1: payload.responseMessage,
+          text1Style: { backgroundColor: 'green' },
+          type: 'success'
+        })
+      }
+    })
+  }
+
+  const handleCheckDevice = async () => {
+    let deviceToken = await AsyncStorage.getItem(DeviceTokenEnum.key)
+    let deviceDto: DeviceDto = {
+      id: 0,
+      deviceBrand: deviceInfoState.brand ?? "",
+      deviceModelName: deviceInfoState.modelName ?? "",
+      deviceToken: deviceToken ?? "",
+      tokenDeletionStatus: null,
+      userDto: loginState.userDto,
+      isDeleted: false,
+      distinctDeviceModelName: '',
+      distinctDeviceBrand: ''
+    }
+    let checkUserDevice = await CheckDevice(deviceDto)
+    if (checkUserDevice?.responseStatus === ResponseStatus.IsSuccess) {
+      dispatch(iconVisibleStatus({ ...entryExitState,biometricIconVisible:false ,qrCodeIconVisible: false }))
+      if (checkUserDevice.result.deviceToken) {                                                 // Cihaz önceden değiştirilmişse yeni tokenini cihaza ekle
+        await AsyncStorage.removeItem(DeviceTokenEnum.key)
+        await AsyncStorage.setItem(DeviceTokenEnum.key, checkUserDevice.result.deviceToken)
+      }
+      if (checkUserDevice.result.isDeleted) {                 // Cihazın tokeni veritabanından silinmişse telefondan da sil  
+        await AsyncStorage.removeItem(DeviceTokenEnum.key)
+      }
+    }
+    else if (checkUserDevice?.responseStatus === ResponseStatus.IsWarning) {
+      dispatch(iconVisibleStatus({ ...entryExitState,biometricIconVisible:true, qrCodeIconVisible: true }))
+      Toast.show({ text1: "Uyarı", text2: checkUserDevice?.responseMessage, type: 'info' })
+    }
+    else {
+      dispatch(iconVisibleStatus({ ...entryExitState, biometricIconVisible:true, qrCodeIconVisible: true }))
+      Toast.show({ text1: "Cihaz Hatası", text2: checkUserDevice?.responseMessage, type: 'error' })
     }
   }
+  // const handleBiometricCheck = async () => {
+  //   const hasHardware = await LocalAuthentication.hasHardwareAsync(); // Parmak izi donanımı var mı?
+  //   const isEnrolled = await LocalAuthentication.isEnrolledAsync();   // Telefona eklenen parmak izi var mı ?
+  //   const authTypes = await LocalAuthentication.supportedAuthenticationTypesAsync(); // Cihaz hangi türden biyometrik doğrulamayı destekliyor(donanımı olabilir ama aktif olarak kullanılmayabilir)   --->  [1,2]
+  //   const ishaveFingerPrint = authTypes.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)
+  //   const ishaveFacialRecognition = authTypes.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)
+  //   const ishaveIris = authTypes.includes(LocalAuthentication.AuthenticationType.IRIS)
+
+  //   if (hasHardware && isEnrolled && (ishaveFingerPrint || ishaveFacialRecognition || ishaveIris)) {
+  //     let dto: EntryExitDto = { ...initialEntryExitDto, roleId: loginState.roleDto.id, userId: loginState.userDto.id, locationDto: { latitude: locationState.coords.latitude, longitude: locationState.coords.longitude, areaControl: null } }
+
+  //     const response = await dispatch(entryExitCheckStore(dto))
+  //     let responsePayload = response.payload as ServiceResult<EntryExitDto>;
+  //     if (responsePayload.responseStatus === ResponseStatus.IsSuccess) {
+  //       // Toast.show({ text1: 'Biyometrik Okuma İşlemi', text2: responsePayload.responseMessage })
+  //     }
+  //     else if (responsePayload.responseStatus === ResponseStatus.IsWarning) {
+  //     }
+  //     else {
+  //       setTimeout(() => {
+  //         Toast.show({ text1: 'Biyometrik Okuma İşlemi', text2: responsePayload.responseMessage, type: 'error' })
+  //       }, 1500);
+  //     }
+  //   }
+  // }
 
   useFocusEffect(
     useCallback(() => {
       dispatch(deviceInfoStore());
-      let handleCheckDevice = async () => {
-        let deviceToken = await AsyncStorage.getItem(DeviceTokenEnum.key)
-        let deviceDto: DeviceDto = {
-          id: 0,
-          deviceBrand: deviceInfoState.brand ?? "",
-          deviceModelName: deviceInfoState.modelName ?? "",
-          deviceToken: deviceToken ?? "",
-          tokenDeletionStatus: null,
-          userDto: loginState.userDto,
-          isDeleted: false,
-          distinctDeviceModelName: '',
-          distinctDeviceBrand: ''
-        }
-        let checkUserDevice = await CheckDevice(deviceDto)
-        if (checkUserDevice?.responseStatus === ResponseStatus.IsSuccess) {
-          dispatch(barcodeSlice.actions.barcodeVisible({ ...barcodeState, qrCodeVisibleState: false }))
-          if (checkUserDevice.result.isDeleted) {
-            await AsyncStorage.removeItem(DeviceTokenEnum.key)
-          }
-        }
-        else if (checkUserDevice?.responseStatus === ResponseStatus.IsWarning) {
-          Toast.show({ text1: "Uyarı", text2: checkUserDevice?.responseMessage, type: 'info' })
-          dispatch(barcodeSlice.actions.barcodeVisible({ ...barcodeState, qrCodeVisibleState: true }))
-        }
-        else {
-          dispatch(barcodeSlice.actions.barcodeVisible({ ...barcodeState, qrCodeVisibleState: true }))
-          Toast.show({ text1: "Cihaz Hatası", text2: checkUserDevice?.responseMessage, type: 'error' })
-        }
-      }
       if (loginState.isLoggedIn && loginState.userDto.id > 0 && deviceInfoState.brand && deviceInfoState.modelName) {
-        handleCheckDevice()
-        handleBarcodeCheck()
-
+        if (locationState.coords.latitude && locationState.coords.longitude && deviceInfoState != initialDeviceInformationDto) {
+          handleCheckDevice()
+          handleEntryExitCheck()
+          // handleBiometricCheck()
+        }
       }
-    }, [deviceInfoState.brand, loginState.roleDto.id, locationState.coords.latitude,locationState.coords.longitude])
+    }, [deviceInfoState.brand, deviceInfoState.modelName, loginState.roleDto.id, locationState.coords.latitude, locationState.coords.longitude])
   )
 
   const LeftContent = (props: any) => <Avatar.Image {...props} source={loginState.userDto.gender === GenderEnum.Man ? require('../../assets/user_man_icon.png') : loginState.userDto.gender === GenderEnum.Woman ? require('../../assets/user_woman_icon.png') : ""} size={100} />
@@ -111,17 +146,35 @@ export default function ProfileComponent() {
       </LinearGradient>
     </View>
   }
+
+  const pdks = () => {
+    if (entryExitState.barcodeReadEnum || entryExitState.biometricEnum || entryExitState.adminApproveEnum) {
+      if ((entryExitState.barcodeReadEnum === EntryExitEnum.Entreance  && entryExitState.biometricEnum === EntryExitEnum.Exit) || (entryExitState.barcodeReadEnum === EntryExitEnum.Exit  && entryExitState.biometricEnum === EntryExitEnum.Entreance)) {
+        return EntryExitEnum.Exit
+      }
+      else if (entryExitState.barcodeReadEnum === EntryExitEnum.Entreance  || entryExitState.biometricEnum === EntryExitEnum.Entreance || entryExitState.adminApproveEnum === EntryExitEnum.Entreance ) {
+        return EntryExitEnum.Entreance
+      }
+      else if (entryExitState.barcodeReadEnum === EntryExitEnum.Exit || entryExitState.biometricEnum === EntryExitEnum.Exit || entryExitState.adminApproveEnum === EntryExitEnum.Exit) {
+        return EntryExitEnum.Exit
+      }
+      else {
+        return EntryExitEnum.Default
+      }
+    }
+  }
+
   const EntranceOrExitStatus = () => {
-    return barcodeState.loading ?
+    return entryExitState.status ?
       (<Chip textStyle={{ color: 'black', justifyContent: 'center', fontSize: 12 }}
-        style={barcodeState.barcodeReadEnum && barcodeState.barcodeReadEnum === BarcodeReadEnum.Entreance ? { backgroundColor: '#70e000' } : barcodeState.barcodeReadEnum === BarcodeReadEnum.Exit ? { backgroundColor: '#a7333f' } : { backgroundColor: "#ECB125" }}
+        style={pdks() === EntryExitEnum.Entreance ? { backgroundColor: '#70e000' } : pdks() === EntryExitEnum.Exit ? { backgroundColor: '#a7333f' } : { backgroundColor: "#ECB125" }}
         icon={() => {
           return <Icon
-            source={barcodeState.barcodeReadEnum && barcodeState.barcodeReadEnum === BarcodeReadEnum.Entreance ? "check" : "close"}
+            source={pdks() === EntryExitEnum.Entreance ? "check" : "close"}
             color={"black"}
             size={20}
           />
-        }} >{barcodeState.barcodeReadEnum === BarcodeReadEnum.Entreance ? InputOrOutStatus.Input : barcodeState.barcodeReadEnum === BarcodeReadEnum.Exit ? InputOrOutStatus.Out : InputOrOutStatus.Default}
+        }} >{pdks() === EntryExitEnum.Entreance ? InputOrOutStatus.Input : pdks() === EntryExitEnum.Exit ? InputOrOutStatus.Out : InputOrOutStatus.Default}
       </Chip>) :
       (<ActivityIndicator animating={true} color={MD2Colors.red800} />)
   }
@@ -129,22 +182,22 @@ export default function ProfileComponent() {
   const PersonnelCardInfoComponent = () => (
     <DataTable style={{ width: '100%', height: 100 }}>
       <DataTable.Row style={{ height: 10 }}>
-        <DataTable.Cell style={{ flex: 3 }} textStyle={{ fontSize: 13, fontWeight: 'bold', color: 'black' }}>Cinsiyet</DataTable.Cell>
+        <DataTable.Cell style={{ flex: 4 }} textStyle={{ fontSize: 13, fontWeight: 'bold', color: 'black' }}>Cinsiyet</DataTable.Cell>
         <DataTable.Cell style={{ flex: 1 }} textStyle={{ fontSize: 13, fontWeight: 'bold', color: 'black' }}>:</DataTable.Cell>
         <DataTable.Cell style={{ flex: 10 }} textStyle={{ fontSize: 13, fontStyle: 'italic', color: 'black' }}>{loginState.userDto.gender}</DataTable.Cell>
       </DataTable.Row>
       <DataTable.Row>
-        <DataTable.Cell style={{ flex: 3 }} textStyle={{ fontSize: 13, fontWeight: 'bold', color: 'black' }}>Departman</DataTable.Cell>
+        <DataTable.Cell style={{ flex: 4 }} textStyle={{ fontSize: 13, fontWeight: 'bold', color: 'black' }}>Departman</DataTable.Cell>
         <DataTable.Cell style={{ flex: 1 }} textStyle={{ fontSize: 13, fontWeight: 'bold', color: 'black' }}>:</DataTable.Cell>
         <DataTable.Cell style={{ flex: 10 }} textStyle={{ fontSize: 13, fontStyle: 'italic', color: 'black' }}>{loginState.roleDto?.roleName}</DataTable.Cell>
       </DataTable.Row>
       <DataTable.Row style={{ width: '100%' }}>
-        <DataTable.Cell style={{ flex: 3 }} textStyle={{ fontSize: 13, fontWeight: 'bold', color: 'black' }}>Telefon</DataTable.Cell>
+        <DataTable.Cell style={{ flex: 4 }} textStyle={{ fontSize: 13, fontWeight: 'bold', color: 'black' }}>Telefon</DataTable.Cell>
         <DataTable.Cell style={{ flex: 1 }} textStyle={{ fontSize: 13, fontWeight: 'bold', color: 'black' }}>:</DataTable.Cell>
         <DataTable.Cell style={{ flex: 10 }} textStyle={{ fontSize: 13, fontStyle: 'italic', color: 'black' }}>{loginState.userDto.phoneNumber}</DataTable.Cell>
       </DataTable.Row>
       <DataTable.Row style={{ width: '100%' }}>
-        <DataTable.Cell style={{ flex: 3 }} textStyle={{ fontSize: 13, fontWeight: 'bold', color: 'black' }}>Email</DataTable.Cell>
+        <DataTable.Cell style={{ flex: 4 }} textStyle={{ fontSize: 13, fontWeight: 'bold', color: 'black' }}>Email</DataTable.Cell>
         <DataTable.Cell style={{ flex: 1 }} textStyle={{ fontSize: 13, fontWeight: 'bold', color: 'black' }}>:</DataTable.Cell>
         <DataTable.Cell style={{ flex: 10 }} textStyle={{ fontSize: 13, fontStyle: 'italic', color: 'black' }}>{loginState.userDto.email}</DataTable.Cell>
       </DataTable.Row>
@@ -212,7 +265,6 @@ export default function ProfileComponent() {
         </LinearGradient>
       </List.Accordion>
     </List.Section>
-
   )
   return (
     <View>

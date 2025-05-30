@@ -85,41 +85,46 @@ namespace Bussiness.Services.LoginService
             var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
             var headers = _httpContextAccessor.HttpContext?.Response?.Headers;
             var user = await _userDal.GetAsync(x => x.UserName == loginDto.UserDto.UserName && x.Password == loginDto.UserDto.Password);
-            var maptologinDto = new LoginDto();
-            if (user != null)
+
+            if (user == null)
             {
-                maptologinDto.UserDto = new UserDto
-                {
-                    Id = user.Id,
-                    UserName = user.UserName,
-                    FirstName = user.FirstName,
-                    Gender = user.Gender,
-                    LastName = user.LastName,
-                    Password = user.Password,
-                    Email = user.Email,
-                    PhoneNumber=user.PhoneNumber
-                };
+                return new ServiceResult<LoginDto> { ResponseStatus = ResponseStatus.IsWarning, ResponseMessage = "Kullanıcı adı yada şifre yanlış" };
+            }
+            if (!user.IsActive)  // Kullanıcı aktif değilse giriş yapamasın
+            {
+                return new ServiceResult<LoginDto> { ResponseStatus = ResponseStatus.IsError, ResponseMessage = "Kullanıcı Aktif olmadığından giriş yapılamaz" };
+            }
 
-                maptologinDto.RoleDto = new RoleDto { Id = user.RoleId, RoleName = user.RoleName };
+            var maptologinDto = new LoginDto();
 
-                if (headers?.ContainsKey("authorization") == true)
-                {
-                    headers.Remove("authorization");
-                    //headers.Authorization = $"Bearer {new BuildToken(environment).CreateToken(maptologinDto)}";
-                }
-                else
-                {
-                    headers?.Append("Authorization", $"Bearer {new BuildToken(environment).CreateToken(maptologinDto)}");
-                }
-                maptologinDto.IsLoggedIn = true;
-                maptologinDto.RememberMe = loginDto.RememberMe;
-                await _notificationService.GetlAllNotifyAdminAsync();
-                return new ServiceResult<LoginDto> { ResponseStatus = ResponseStatus.IsSuccess, Result = maptologinDto };
+            maptologinDto.UserDto = new UserDto
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                FirstName = user.FirstName,
+                Gender = user.Gender,
+                LastName = user.LastName,
+                Password = user.Password,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber
+            };
+
+            maptologinDto.RoleDto = new RoleDto { Id = user.RoleId, RoleName = user.RoleName };
+
+            if (headers?.ContainsKey("authorization") == true)
+            {
+                headers.Remove("authorization");
+                //headers.Authorization = $"Bearer {new BuildToken(environment).CreateToken(maptologinDto)}";
             }
             else
             {
-                return new ServiceResult<LoginDto> { ResponseStatus = ResponseStatus.IsError };
+                headers?.Append("Authorization", $"Bearer {new BuildToken(environment).CreateToken(maptologinDto)}");
             }
+            maptologinDto.IsLoggedIn = true;
+            maptologinDto.RememberMe = loginDto.RememberMe;
+            await _notificationService.GetlAllNotifyAdminAsync();
+            return new ServiceResult<LoginDto> { ResponseStatus = ResponseStatus.IsSuccess, Result = maptologinDto };
+
         }
         public async Task<ServiceResult<ForgottenPasswordDto>> ForgottenPassword(ForgottenPasswordDto emailDto) // frontend den EmailConfirmStatus u false gönder
         {

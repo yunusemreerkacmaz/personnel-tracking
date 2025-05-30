@@ -2,12 +2,12 @@ import { AxiosResponse } from "axios";
 import { ServiceResult } from "../../../../ServiceResults/serviceResult";
 import { getApiUrl } from "../../../../Helpers/Helper";
 import Toast from "react-native-toast-message";
-import { UserBarcodeLoginDto } from "../Dtos/userBarcodeLogin";
+import { UserBarcodeLoginDto as UserEntryExitLoginDto } from "../Dtos/userBarcodeLogin";
 
-export const GetBarcodeUserLoginService = async () => {
+export const GetEntryExitUserLogin = async () => {
     try {
         const { axiosInstance } = await getApiUrl()
-        const response: AxiosResponse<ServiceResult<UserBarcodeLoginDto>> = await axiosInstance.get(`User/GetBarcodeUserLoginService`);
+        const response: AxiosResponse<ServiceResult<UserEntryExitLoginDto>> = await axiosInstance.get(`User/GetEntryExitUserLogin`);
         return response.data
     } catch (error) {
         console.log("GetUsers error = " + error);
@@ -18,10 +18,10 @@ export const GetBarcodeUserLoginService = async () => {
     }
 }
 
-export const GetBarcodeUserLogoutService = async () => {
+export const GetEntryExitUserLogout = async () => {
     try {
         const { axiosInstance } = await getApiUrl()
-        const response: AxiosResponse<ServiceResult<UserBarcodeLoginDto>> = await axiosInstance.get(`User/GetBarcodeUserLogoutService`);
+        const response: AxiosResponse<ServiceResult<UserEntryExitLoginDto>> = await axiosInstance.get(`User/GetEntryExitUserLogout`);
         return response.data
     } catch (error) {
         console.log("GetUsers error = " + error);
@@ -32,10 +32,10 @@ export const GetBarcodeUserLogoutService = async () => {
     }
 }
 
-export const UpdateBarcodeUser = async (userDto: UserBarcodeLoginDto) => {
+export const UpdateEntryExitUser = async (userDto: UserEntryExitLoginDto) => {
     try {
         const { axiosInstance } = await getApiUrl()
-        const response: AxiosResponse<ServiceResult<UserBarcodeLoginDto>> = await axiosInstance.post(`User/UpdateBarcodeUser`, userDto);
+        const response: AxiosResponse<ServiceResult<UserEntryExitLoginDto>> = await axiosInstance.post(`User/UpdateEntryExitUser`, userDto);
         return response.data
     } catch (error) {
         console.log("AddUser error = " + error);
@@ -46,17 +46,17 @@ export const UpdateBarcodeUser = async (userDto: UserBarcodeLoginDto) => {
     }
 }
 
-export const DeleteBarcodeUsers = async (usersDto: UserBarcodeLoginDto[]) => {
-    try {
-        const { axiosInstance } = await getApiUrl()
-        const response: AxiosResponse<ServiceResult<UserBarcodeLoginDto>> = await axiosInstance.post(`User/DeleteUsers`, usersDto);
-        return response.data
-    } catch (error) {
-        console.log("DeleteUsers error = " + error);
+// export const DeleteBarcodeUsers = async (usersDto: UserEntryExitLoginDto[]) => {
+//     try {
+//         const { axiosInstance } = await getApiUrl()
+//         const response: AxiosResponse<ServiceResult<UserEntryExitLoginDto>> = await axiosInstance.post(`User/DeleteUsers`, usersDto);
+//         return response.data
+//     } catch (error) {
+//         console.log("DeleteUsers error = " + error);
 
-        Toast.show({
-            text1: 'Role Sunucu Hatası',
-            type: 'error',
-        })
-    }
-}
+//         Toast.show({
+//             text1: 'Role Sunucu Hatası',
+//             type: 'error',
+//         })
+//     }
+// }

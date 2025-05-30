@@ -23,7 +23,7 @@ namespace Bussiness.Services.DeviceService
         Task<ServiceResult<DeviceDto>> UpdateDeviceService(DeviceDto deviceDto);
         Task<ServiceResult<bool>> DeleteDeviceService(int userId);
     }
-    public class DeviceService(IHttpContextAccessor httpContextAccessor, IUserDal userDal, IBarcodeDal barcodeDal, IDeviceDal deviceDal) : IDeviceService
+    public class DeviceService(IHttpContextAccessor httpContextAccessor, IUserDal userDal, IDeviceDal deviceDal) : IDeviceService
     {
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
         private readonly IUserDal _userDal = userDal;
@@ -48,20 +48,26 @@ namespace Bussiness.Services.DeviceService
             {
                 deviceDto.IsDeleted = getDevice.IsDeleted;
 
-                if (getDevice.DeviceToken == deviceToken)  // Kullanıcı başka bir cihazdan girmişse Cihaz Onaylama ekranına gönder
+                if (getDevice.DeviceToken == deviceToken && getDevice.DeviceModelName == deviceDto.DeviceModelName && getDevice.DeviceBrand == deviceDto.DeviceBrand)  // Kullanıcı aynı cihazdan girmişse 
                 {
                     return new ServiceResult<DeviceDto> { ResponseStatus = ResponseStatus.IsSuccess };
                 }
                 else
                 {
-                    if (getDevice.DistinctDevice == null)                               // Farklı bir cihazdan giriş yaptı
+                    if (getDevice.DistinctDevice == null && getDevice.DeviceModelName != deviceDto.DeviceModelName && getDevice.DeviceBrand != deviceDto.DeviceBrand)                               // Farklı bir cihazdan giriş yaptı Cihaz Onaylama ekranına gönder
                     {
                         getDevice.DistinctDeviceBrand = deviceDto.DeviceBrand;
                         getDevice.DistinctDeviceModelName = deviceDto.DeviceModelName;
                         getDevice.DistinctDevice = true;
-                        var update = _deviceDal.UpdateAsync(getDevice);
+                        getDevice.UpdateTime = DateTime.Now;
+                        var update = await _deviceDal.UpdateAsync(getDevice);
                     }
-                    if (getDevice.DistinctDevice == false)  // // Admin Cihaz onayı vermemişse
+                    if (getDevice.DistinctDevice == null && getDevice.DeviceModelName == deviceDto.DeviceModelName && getDevice.DeviceBrand == deviceDto.DeviceBrand)
+                    {
+                        deviceDto.DeviceToken = getDevice.DeviceToken;
+                        return new ServiceResult<DeviceDto> { Result=deviceDto,ResponseStatus = ResponseStatus.IsSuccess };
+                    }
+                    if (getDevice.DistinctDevice == false)  // Admin Cihaz onayı vermemişse
                     {
                         return new ServiceResult<DeviceDto> { ResponseStatus = ResponseStatus.IsWarning, ResponseMessage = "Yöneticiniz bu cihaz ile işlem yapabilmenizi engelledi." };
 
@@ -72,11 +78,12 @@ namespace Bussiness.Services.DeviceService
             else if (getDevice != null && string.IsNullOrEmpty(deviceToken))  // kullanıcının veritabanında cihazı kayıtlıysa ama tokeni yoksa cihaz değişikliği onayı gönder Admine (Kullanıcı Telefonunu Formatlarsa)
             {
                 deviceDto.IsDeleted = getDevice.IsDeleted;
-                if (getDevice.DistinctDevice == null && getDevice.DeviceToken != null)                                  // Kullanıcı kendi cihazından giriş yapmışsa
+                if (getDevice.DistinctDevice == null && getDevice.DeviceToken != null)   // Kullanıcı kendi cihazından giriş yapmışsa
                 {
                     getDevice.DistinctDeviceBrand = deviceDto.DeviceBrand;
                     getDevice.DistinctDeviceModelName = deviceDto.DeviceModelName;
                     getDevice.DistinctDevice = true;
+                    getDevice.UpdateTime = DateTime.Now;
                     var update = await _deviceDal.UpdateAsync(getDevice);
                     if (update)
                     {
@@ -87,9 +94,12 @@ namespace Bussiness.Services.DeviceService
                         return new ServiceResult<DeviceDto> { ResponseStatus = ResponseStatus.IsError };
                     }
                 }
-                else if (getDevice.DistinctDevice == null && getDevice.DeviceToken != null)
+                else if (getDevice.DistinctDeviceModelName != deviceDto.DeviceModelName && getDevice.DeviceBrand != deviceDto.DistinctDeviceBrand && getDevice.DeviceToken != null) // Cihaz veritabanında varsa ve tokeni yoksa ve cihaz marka model önceki çakışan model den farklıysa tekrar admine onaylama gönder
                 {
-                    getDevice.DeviceToken = deviceToken;
+                    getDevice.DistinctDeviceBrand = deviceDto.DeviceBrand;
+                    getDevice.DistinctDeviceModelName = deviceDto.DeviceModelName;
+                    getDevice.DistinctDevice = true;
+                    getDevice.UpdateTime = DateTime.Now;
                     var update = await _deviceDal.UpdateAsync(getDevice);
                     if (update)
                     {
@@ -102,13 +112,13 @@ namespace Bussiness.Services.DeviceService
                 }
                 else
                 {
-                    return new ServiceResult<DeviceDto> { ResponseStatus = ResponseStatus.IsError };
+                    return new ServiceResult<DeviceDto> { ResponseStatus = ResponseStatus.IsWarning, ResponseMessage = "Cihaz bilgisi eşleşmedi.Lüften yönetici ile görüşüp cihazınızı onaylatın" };
                 }
             }
             else if (getDevice == null && !string.IsNullOrEmpty(deviceToken)) // Kullanıcıyı veritabanından biri silerse ve telefonunda hala tokeni varsa
             {
-                var isUsingTokenByAnotherPerson = _deviceDal.GetAllQueryAble(x => x.DeviceToken == deviceToken.ToString() && !x.IsDeleted);
-                if (!isUsingTokenByAnotherPerson.Any())                     // Kişi kendi telefonundan giriş yapmışsa
+                var isUsingTokenByAnotherPerson = _deviceDal.GetAllQueryAble(x => x.DeviceToken == deviceToken.ToString() && (x.DistinctDevice==null || x.DistinctDevice==false) && !x.IsDeleted); // bu tokendan başka kullanıcıda varsa , silinmemişse ve cihaz çakışmıyorsa yada başkası tarafından kullanılmaya devam edecekse
+                if (!isUsingTokenByAnotherPerson.Any())                     // Kişi kendi telefonundan giriş yapmışsa (silinmemiş , cihaz değişikliği reddedilmiş yada cihazı çakışmayan token yoksa)
                 {
                     var deviceHashDto = new DeviceHashDto
                     {
@@ -117,6 +127,7 @@ namespace Bussiness.Services.DeviceService
                         Password = deviceDto.UserDto.Password,
                         DeviceBrand = deviceDto.DeviceBrand,
                         DeviceModelName = deviceDto.DeviceModelName,
+                        CreateTime = DateTime.Now
                     };
                     string? json = JsonSerializer.Serialize(deviceHashDto);
                     var generateDeviceToken = CreateHS256(json, deviceDto.UserDto.Id.ToString());
@@ -198,6 +209,7 @@ namespace Bussiness.Services.DeviceService
                     Password = deviceDto.UserDto.Password,
                     DeviceBrand = deviceDto.DeviceBrand,
                     DeviceModelName = deviceDto.DeviceModelName,
+                    CreateTime = DateTime.Now
                 };
                 string? json = JsonSerializer.Serialize(deviceHashDto);
                 generateDeviceToken = CreateHS256(json, deviceDto.UserDto.Id.ToString());
@@ -287,10 +299,10 @@ namespace Bussiness.Services.DeviceService
                         Email = user.Email,
                         Gender = user.Gender,
                         UpdateTime = user.UpdateTime,
-                        PhoneNumber=user.PhoneNumber,
+                        PhoneNumber = user.PhoneNumber,
                     },
-                    DeviceBrand=device.DeviceBrand,
-                    DeviceModelName=device.DeviceModelName,
+                    DeviceBrand = device.DeviceBrand,
+                    DeviceModelName = device.DeviceModelName,
                     DistinctDeviceBrand = device.DistinctDeviceBrand,
                     DistinctDeviceModelName = device.DistinctDeviceModelName
                 });
@@ -324,6 +336,8 @@ namespace Bussiness.Services.DeviceService
             {
                 device.DeviceModelName = device.DistinctDeviceModelName;
                 device.DeviceBrand = device.DistinctDeviceBrand;
+                device.DistinctDeviceBrand = null;
+                device.DistinctDeviceModelName = null;
                 var deviceHashDto = new DeviceHashDto
                 {
                     UserId = user.Id,
@@ -331,15 +345,15 @@ namespace Bussiness.Services.DeviceService
                     Password = user.Password,
                     DeviceBrand = device.DistinctDeviceBrand,
                     DeviceModelName = device.DistinctDeviceModelName,
+                    CreateTime = device.CreateTime
                 };
                 string? json = JsonSerializer.Serialize(deviceHashDto);
                 var generateDeviceToken = CreateHS256(json, user.Id.ToString());
 
                 device.DeviceToken = generateDeviceToken;
                 device.DistinctDevice = null;
-                device.DeviceToken = generateDeviceToken;
             }
-            else if (device != null && deviceDto.TokenDeletionStatus == false)      // cihaz varsa  ve cihaz değişimi reddedilmişse
+            else if (device != null && deviceDto.TokenDeletionStatus == false)      // cihaz varsa ve cihaz değişimi reddedilmişse
             {
                 device.DistinctDevice = false;
             }
@@ -349,11 +363,13 @@ namespace Bussiness.Services.DeviceService
             }
             if (device != null)
             {
+                device.UpdateTime = DateTime.Now;
                 update = await _deviceDal.UpdateAsync(device);
             }
             if (update && deviceDto.TokenDeletionStatus == true)
             {
-                return new ServiceResult<DeviceDto> { ResponseStatus = ResponseStatus.IsSuccess, ResponseMessage = "Kullanıcının cihaz değişimi onaylandı.Kullanıcı cihazı aktif kullanabilir" };
+                deviceDto.DeviceToken = device.DeviceToken;
+                return new ServiceResult<DeviceDto> { Result=deviceDto,ResponseStatus = ResponseStatus.IsSuccess, ResponseMessage = "Kullanıcının cihaz değişimi onaylandı.Kullanıcı cihazı aktif kullanabilir" };
             }
             else if (update && deviceDto.TokenDeletionStatus == false)
             {

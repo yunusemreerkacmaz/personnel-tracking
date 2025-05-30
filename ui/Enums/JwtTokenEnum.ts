@@ -1,7 +1,6 @@
 export enum LoginJwtTokenEnum{
     key="personnel-tracking-key",
     value="personnel-tracking",
-
 }
 export enum  DeviceTokenEnum{
     key="device-token",

@@ -38,8 +38,14 @@ export const loginStore = createAsyncThunk<ServiceResult<LoginDto>, LoginDto>(
             }
             if (response.data.responseStatus === ResponseStatus.IsError) {
                 Toast.show({
+                    text1: "Giriş Hatası", type: 'error', text1Style: { fontSize: 18, color: 'red' },
+                    text2: response.data.responseMessage, text2Style: { fontSize: 15 }
+                })
+            }
+            else if (response.data.responseStatus===ResponseStatus.IsWarning) {
+                Toast.show({
                     text1: "Giriş Hatası", type: 'info', text1Style: { fontSize: 18, color: 'red' },
-                    text2: "Kullanıcı adı veya şifre hatalı", text2Style: { fontSize: 15 }
+                    text2: response.data.responseMessage, text2Style: { fontSize: 15 }
                 })
             }
             return response.data; // Backend'den gelen yanıt

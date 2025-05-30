@@ -1,5 +1,4 @@
 ﻿using Bussiness.ServiceResults;
-using Bussiness.Services.BarcodeService.Dtos;
 using Bussiness.Services.RoleService.Dtos;
 using Bussiness.Services.Stores.Dtos;
 using Bussiness.Services.UserService.Dtos;
@@ -15,19 +14,19 @@ namespace Bussiness.Services.UserService
     {
         Task<ServiceResult<AddUserDto>> AddUser(AddUserDto addUserDto);
         Task<ServiceResult<GetUserDto>> GetUsers();
-        Task<ServiceResult<DeleteUsersDto>> DeleteUsers([FromBody] List<DeleteUsersDto> deleteUsersDtos);
+        //Task<ServiceResult<DeleteUsersDto>> DeleteUsers([FromBody] List<DeleteUsersDto> deleteUsersDtos);
         Task<ServiceResult<AddUserDto>> UpdateUser(AddUserDto updateUserDto);
-        Task<ServiceResult<UserBarcodeLoginDto>> GetBarcodeUserLoginService();
-        Task<ServiceResult<UserBarcodeLoginDto>> GetBarcodeUserLogoutService();
-        Task<ServiceResult<UserBarcodeLoginDto>> UpdateBarcodeUserService(UserBarcodeLoginDto updateUserDto);  // Aşağıya GetBarcodeUserService(bunu giriş bilgierini çeksin ama adını değiştir(GetBarcodeUserLoginService) bide çıkış yapacak olanlar içinde servis oluştur((GetBarcodeUserLogoutService)))
+        Task<ServiceResult<UserEntryExitLoginDto>> GetEntryExitUserLoginService(); // Admin onaylı giriş yapma
+        Task<ServiceResult<UserEntryExitLoginDto>> GetEntryExitUserLogoutService(); // Admin onaylı çıkış yapma
+        Task<ServiceResult<UserEntryExitLoginDto>> UpdateEntryExitUserService(UserEntryExitLoginDto updateUserDto);  
     }
-    public class UserService(IUserDal userDal, IBarcodeDal barcodeDal, IStoreDal storeDal, IDeviceDal deviceDal, IHttpContextAccessor httpContextAccessor) : IUserService
+    public class UserService(IUserDal userDal, IEntryExitDal entryExitDal, IStoreDal storeDal, IDeviceDal deviceDal, IHttpContextAccessor httpContextAccessor) : IUserService
     {
         private readonly IUserDal _userDal = userDal;
-        private readonly IBarcodeDal _barcodeDal = barcodeDal;
         private readonly IStoreDal _storeDal = storeDal;
         private readonly IDeviceDal _deviceDal = deviceDal;
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+        private readonly IEntryExitDal _entryExitDal = entryExitDal;
         public async Task<ServiceResult<AddUserDto>> AddUser(AddUserDto addUserDto)
         {
             if (!string.IsNullOrEmpty(addUserDto.UserName))
@@ -88,42 +87,42 @@ namespace Bussiness.Services.UserService
                 return new ServiceResult<AddUserDto> { ResponseStatus = ResponseStatus.IsError, ResponseMessage = "Yetki adı boş bırakılamaz" };
             }
         }
-        public async Task<ServiceResult<DeleteUsersDto>> DeleteUsers([FromBody] List<DeleteUsersDto> deleteUsersDtos)
-        {
-            int allDeletedNumber = 0;
-            var users = _userDal.GetAllQueryAble(x => !x.IsDeleted);       // silinmeyen kullanıcıları getir
-            var barcode = _barcodeDal.GetAllQueryAble();                    // barcode tablosundaki verileri getir
-            var deletedUserIds = deleteUsersDtos.Select(x => x.Id);         // frontend den silinen veirlerin idlerini al
-            var userEntites = users.Where(x => deletedUserIds.Any(i => i == x.Id)); // userlar içinde frontend den gelenlerle eşleşenleri al
-            var willBeDeleteEntities = await userEntites.Where(user => !barcode.Any(i => i.UserId == user.Id)).ToListAsync();  // user tablosunda bu silinecekler arasında olmayanları barkod tablosunda olmayanları bul
+        //public async Task<ServiceResult<DeleteUsersDto>> DeleteUsers([FromBody] List<DeleteUsersDto> deleteUsersDtos)
+        //{
+        //    int allDeletedNumber = 0;
+        //    var users = _userDal.GetAllQueryAble(x => !x.IsDeleted);       // silinmeyen kullanıcıları getir
+        //    var entryExitItems = _entryExitDal.GetAllQueryAble();                    // barcode tablosundaki verileri getir
+        //    var deletedUserIds = deleteUsersDtos.Select(x => x.Id);         // frontend den silinen veirlerin idlerini al
+        //    var userEntites = users.Where(x => deletedUserIds.Any(i => i == x.Id)); // userlar içinde frontend den gelenlerle eşleşenleri al
+        //    var willBeDeleteEntities = await userEntites.Where(user => !entryExitItems.Any(i => i.UserId == user.Id)).ToListAsync();  // user tablosunda bu silinecekler arasında olmayanları barkod tablosunda olmayanları bul
 
-            foreach (var user in willBeDeleteEntities)
-            {
-                user.DeleteTime = DateTime.Now;
-                user.IsDeleted = true;
-                var isDeleted = await _userDal.UpdateAsync(user);
-                if (!isDeleted)
-                {
-                    allDeletedNumber++;
-                }
-            }
-            if (willBeDeleteEntities.Count > 0 && allDeletedNumber == 0 && willBeDeleteEntities.Count == deletedUserIds.Count())
-            {
-                return new ServiceResult<DeleteUsersDto> { ResponseStatus = ResponseStatus.IsSuccess, ResponseMessage = "Tüm silme işlemi başarılı" };
-            }
-            else if (willBeDeleteEntities.Count > allDeletedNumber)
-            {
-                return new ServiceResult<DeleteUsersDto> { ResponseStatus = ResponseStatus.IsError, ResponseMessage = $"Seçtiğiniz {deleteUsersDtos.Count} kullanıcıdan {deleteUsersDtos.Count - willBeDeleteEntities.Count} tanesi silinemedi.Silinmeyen personelleri silmek için güncelleme ekranında pasif'e almanız gerekiyor." };
-            }
-            else if (willBeDeleteEntities.Count == 0)
-            {
-                return new ServiceResult<DeleteUsersDto> { ResponseStatus = ResponseStatus.IsWarning, ResponseMessage = $"Silinmeyen personelleri silmek için güncelleme ekranında pasif'e almanız gerekiyor." };
-            }
-            else
-            {
-                return new ServiceResult<DeleteUsersDto> { ResponseStatus = ResponseStatus.IsError, ResponseMessage = "Silme işleminde hata oluştu" };
-            }
-        }
+        //    foreach (var user in willBeDeleteEntities)
+        //    {
+        //        user.DeleteTime = DateTime.Now;
+        //        user.IsDeleted = true;
+        //        var isDeleted = await _userDal.UpdateAsync(user);
+        //        if (!isDeleted)
+        //        {
+        //            allDeletedNumber++;
+        //        }
+        //    }
+        //    if (willBeDeleteEntities.Count > 0 && allDeletedNumber == 0 && willBeDeleteEntities.Count == deletedUserIds.Count())
+        //    {
+        //        return new ServiceResult<DeleteUsersDto> { ResponseStatus = ResponseStatus.IsSuccess, ResponseMessage = "Tüm silme işlemi başarılı" };
+        //    }
+        //    else if (willBeDeleteEntities.Count > allDeletedNumber)
+        //    {
+        //        return new ServiceResult<DeleteUsersDto> { ResponseStatus = ResponseStatus.IsError, ResponseMessage = $"Seçtiğiniz {deleteUsersDtos.Count} kullanıcıdan {deleteUsersDtos.Count - willBeDeleteEntities.Count} tanesi silinemedi.Silinmeyen personelleri silmek için güncelleme ekranında pasif'e almanız gerekiyor." };
+        //    }
+        //    else if (willBeDeleteEntities.Count == 0)
+        //    {
+        //        return new ServiceResult<DeleteUsersDto> { ResponseStatus = ResponseStatus.IsWarning, ResponseMessage = $"Silinmeyen personelleri silmek için güncelleme ekranında pasif'e almanız gerekiyor." };
+        //    }
+        //    else
+        //    {
+        //        return new ServiceResult<DeleteUsersDto> { ResponseStatus = ResponseStatus.IsError, ResponseMessage = "Silme işleminde hata oluştu" };
+        //    }
+        //}
         public async Task<ServiceResult<GetUserDto>> GetUsers()
         {
             var headers = _httpContextAccessor.HttpContext?.Request?.Headers;
@@ -137,11 +136,9 @@ namespace Bussiness.Services.UserService
             loginDto.UserDto.Email == user.Email &&
             loginDto.RoleDto.RoleName.ToLower().Trim() == user.RoleName.ToLower().Trim());
 
-            var barcodeUserIds = _barcodeDal.GetAllQueryAble().Select(barcode => barcode.UserId);
+            var exitEntryUserIds=_entryExitDal.GetAllQueryAble().Select(record=>record.UserId);
             var users = _userDal.GetAllQueryAble(x => !x.IsDeleted).Where(x => getUser.RoleId == 1 || (x.StoreId == getUser.StoreId && x.RoleId != 1));  //Admin herkesi görsün ama mağaza yöneticileri altında çalışanları görsün ve admin o mağazaya dahilse gözükmesin
-
             var stores = _storeDal.GetAllQueryAble(x => !x.IsDeleted);
-            var barcodesUserIds = _barcodeDal.GetAllQueryAble().Select(x => x.UserId);
 
             var storeAndUserJoin = users.Join(stores,
             user => user.StoreId,
@@ -153,7 +150,7 @@ namespace Bussiness.Services.UserService
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 IsActive = user.IsActive, // Önce kullanıcı aktif mi diye baksın .Eğer kullanıcı aktif ise barkod tablosuna baksın kullancı varsa silinemez gidip kullanıcı tablosunda pasife alması gerekir
-                IsHaveBarcode = barcodesUserIds.Any(barcodeUserId => barcodeUserId == user.Id),
+                IsHaveBarcode = exitEntryUserIds.Any(barcodeUserId => barcodeUserId == user.Id),
                 Email = user.Email,
                 Password = user.Password,
                 Gender = user.Gender,
@@ -251,16 +248,16 @@ namespace Bussiness.Services.UserService
                 return new ServiceResult<AddUserDto> { ResponseStatus = ResponseStatus.IsError, ResponseMessage = "Gönderilen bilgilerde hata var" };
             }
         }
-        public async Task<ServiceResult<UserBarcodeLoginDto>> GetBarcodeUserLoginService()
+        public async Task<ServiceResult<UserEntryExitLoginDto>> GetEntryExitUserLoginService()  // Admin panelinde kullanıcıların giriş yapmayanların bilgisi getirildi
         {
             var results = await (from user in _userDal.GetAllQueryAble(x => !x.IsDeleted && x.IsActive)
-                                 join barcode in _barcodeDal.GetAllQueryAble()
-                                     on user.Id equals barcode.UserId into barcodeGroup
-                                 from barcode in barcodeGroup
+                                 join entryExit in _entryExitDal.GetAllQueryAble()
+                                     on user.Id equals entryExit.UserId into entryExitGroup
+                                 from entryExit in entryExitGroup
                                      .Where(b => b.StartDate.HasValue && b.StartDate.Value.Date == DateTime.Now.Date && b.Entreance == true) // barcode tablosu filtresi burada
                                      .DefaultIfEmpty()
-                                 where barcode == null  // eşleşmeyenler (ya da şarta uymayanlar) ---> user.Id != barcode.UserId
-                                 select new UserBarcodeLoginDto
+                                 where entryExit == null  // eşleşmeyenler (ya da şarta uymayanlar) ---> user.Id != barcode.UserId
+                                 select new UserEntryExitLoginDto
                                  {
                                      UserDto = new UserDto
                                      {
@@ -280,21 +277,21 @@ namespace Bussiness.Services.UserService
                                  }).ToListAsync();
             if (results.Count > 0)
             {
-                return new ServiceResult<UserBarcodeLoginDto> { Results = results, ResponseStatus = ResponseStatus.IsSuccess };
+                return new ServiceResult<UserEntryExitLoginDto> { Results = results, ResponseStatus = ResponseStatus.IsSuccess };
             }
             else
             {
-                return new ServiceResult<UserBarcodeLoginDto> { ResponseStatus = ResponseStatus.IsWarning, ResponseMessage = "Kullanıcı Bulunamadı" };
+                return new ServiceResult<UserEntryExitLoginDto> { ResponseStatus = ResponseStatus.IsWarning, ResponseMessage = "Kullanıcı Bulunamadı" };
             }
         }
-        public async Task<ServiceResult<UserBarcodeLoginDto>> GetBarcodeUserLogoutService()
+        public async Task<ServiceResult<UserEntryExitLoginDto>> GetEntryExitUserLogoutService() // Admin panelinde kullanıcıların çıkış yapmayanların bilgisi getirildi
         {
             var results = await (from user in _userDal.GetAllQueryAble(x => !x.IsDeleted && x.IsActive)
-                                 join barcode in _barcodeDal.GetAllQueryAble()
-                                     on user.Id equals barcode.UserId into barcodeGroup
-                                 from barcode in barcodeGroup
-                                     .Where(b => b.StartDate.HasValue && b.StartDate.Value.Date == DateTime.Now.Date && b.Entreance == true && b.Exit == null) // barcode tablosu filtresi burada
-                                 select new UserBarcodeLoginDto
+                                 join entryExit in _entryExitDal.GetAllQueryAble()
+                                     on user.Id equals entryExit.UserId into entryExitGroup
+                                 from entryExit in entryExitGroup
+                                     .Where(b => b.StartDate.HasValue && b.StartDate.Value.Date == DateTime.Now.Date && b.Entreance == true && b.Exit == false) // barcode tablosu filtresi burada
+                                 select new UserEntryExitLoginDto
                                  {
                                      UserDto = new UserDto
                                      {
@@ -314,14 +311,14 @@ namespace Bussiness.Services.UserService
                                  }).ToListAsync();
             if (results.Count > 0)
             {
-                return new ServiceResult<UserBarcodeLoginDto> { Results = results, ResponseStatus = ResponseStatus.IsSuccess };
+                return new ServiceResult<UserEntryExitLoginDto> { Results = results, ResponseStatus = ResponseStatus.IsSuccess };
             }
             else
             {
-                return new ServiceResult<UserBarcodeLoginDto> { ResponseStatus = ResponseStatus.IsWarning, ResponseMessage = "Kullanıcı Bulunamadı" };
+                return new ServiceResult<UserEntryExitLoginDto> { ResponseStatus = ResponseStatus.IsWarning, ResponseMessage = "Kullanıcı Bulunamadı" };
             }
         }
-        public async Task<ServiceResult<UserBarcodeLoginDto>> UpdateBarcodeUserService(UserBarcodeLoginDto updateUserDto)
+        public async Task<ServiceResult<UserEntryExitLoginDto>> UpdateEntryExitUserService(UserEntryExitLoginDto updateUserDto) // Admin panelinde giriş yada çıkış işlemlerini güncelle.
         {
             var user = await _userDal.GetAsync(user => user.Id == updateUserDto.UserDto.Id && !user.IsDeleted && user.IsActive);
             if (user != null)
@@ -332,7 +329,7 @@ namespace Bussiness.Services.UserService
                 {
                     if (updateUserDto.IsApproval == true) // Admin kullanıcı girişi onayı
                     {
-                        var willAddBarcode = new Barcode
+                        var willAddEntryExitEntity = new EntryExitRecord
                         {
                             Id = 0,
                             AreaControl = true,
@@ -340,71 +337,72 @@ namespace Bussiness.Services.UserService
                             StartDate = DateTime.Now,
                             EndDate = null,
                             Entreance = true,
-                            Exit = null,
+                            Exit = false,
                             Latitude = store.Latitude,
                             Longtitude = store.Longitude,
                             RoleId = user.RoleId,
                             UserId = user.Id,
-                            ApprovingAuthorityId = 1, // buradaki metoda sadece admin istek atabildiğinden dolayı
+                            ApprovingAuthorityId = 1, // buradaki metoda sadece admin istek atabildiğinden dolayı direk 1 eklendi
+                            ExitActionType="Admin Onay",
                         };
-                        var addBarcode = await _barcodeDal.AddAsync(willAddBarcode);
-                        if (addBarcode != null)
+                        var addEntryExit = await _entryExitDal.AddAsync(willAddEntryExitEntity);
+                        if (addEntryExit != null)
                         {
-                            return new ServiceResult<UserBarcodeLoginDto> { ResponseStatus = ResponseStatus.IsSuccess, ResponseMessage = "Kullanıcının Girişi Başarılı" };
+                            return new ServiceResult<UserEntryExitLoginDto> { ResponseStatus = ResponseStatus.IsSuccess, ResponseMessage = "Kullanıcının Girişi Başarılı" };
                         }
                         else
                         {
-                            return new ServiceResult<UserBarcodeLoginDto> { ResponseStatus = ResponseStatus.IsError, ResponseMessage = "Kullanıcının Girişi Yapılamadı" };
+                            return new ServiceResult<UserEntryExitLoginDto> { ResponseStatus = ResponseStatus.IsError, ResponseMessage = "Kullanıcının Girişi Yapılamadı" };
                         }
                     }
                     else if (updateUserDto.IsApproval == false)  // Admin kullanıcı çıkışı onayı
                     {
-                        var barcode = await _barcodeDal.GetAllAsync(barcode => barcode.UserId == updateUserDto.UserDto.Id && barcode.StartDate.HasValue && barcode.StartDate.Value.Date == DateTime.Now.Date);
-                        if (barcode != null)
+                        var entryExit = await _entryExitDal.GetAllAsync(entryExit => entryExit.UserId == updateUserDto.UserDto.Id && entryExit.StartDate.HasValue && entryExit.StartDate.Value.Date == DateTime.Now.Date);
+                        if (entryExit != null)
                         {
-                            var lastBarcode = barcode.LastOrDefault();
-
-                            if (lastBarcode != null)
+                            var lastEntryExitItem = entryExit.LastOrDefault();
+                            if (lastEntryExitItem != null)
                             {
-                                lastBarcode.Id = lastBarcode.Id;
-                                lastBarcode.AreaControl = lastBarcode.AreaControl;
-                                lastBarcode.DeviceId = lastBarcode.DeviceId;
-                                lastBarcode.StartDate = lastBarcode.StartDate;
-                                lastBarcode.EndDate = DateTime.Now;
-                                lastBarcode.Entreance = lastBarcode.Entreance;
-                                lastBarcode.Exit = true;
-                                lastBarcode.Latitude = lastBarcode.Latitude;
-                                lastBarcode.Longtitude = lastBarcode.Longtitude;
-                                lastBarcode.RoleId = lastBarcode.RoleId;
-                                lastBarcode.UserId = lastBarcode.UserId;
-                                lastBarcode.ApprovingAuthorityId = 1;       // buradaki metoda sadece admin istek atabildiğinden dolayı
-                                var updateLastBarcode = await _barcodeDal.UpdateAsync(lastBarcode);
-                                if (updateLastBarcode)
+                                lastEntryExitItem.Id = lastEntryExitItem.Id;
+                                lastEntryExitItem.AreaControl = lastEntryExitItem.AreaControl;
+                                lastEntryExitItem.DeviceId = lastEntryExitItem.DeviceId;
+                                lastEntryExitItem.StartDate = lastEntryExitItem.StartDate;
+                                lastEntryExitItem.EndDate = DateTime.Now;
+                                lastEntryExitItem.Entreance = lastEntryExitItem.Entreance;
+                                lastEntryExitItem.Exit = true;
+                                lastEntryExitItem.Latitude = lastEntryExitItem.Latitude;
+                                lastEntryExitItem.Longtitude = lastEntryExitItem.Longtitude;
+                                lastEntryExitItem.RoleId = lastEntryExitItem.RoleId;
+                                lastEntryExitItem.UserId = lastEntryExitItem.UserId;
+                                lastEntryExitItem.EntranceActionType = "Admin Onay";
+                                lastEntryExitItem.ApprovingAuthorityId = 1;       // buradaki metoda sadece admin istek atabildiğinden dolayı direkt 1 eklendi.
+                                var updateLastEntryExitItem = await _entryExitDal.UpdateAsync(lastEntryExitItem);
+                                if (updateLastEntryExitItem)
                                 {
-                                    return new ServiceResult<UserBarcodeLoginDto> { ResponseStatus = ResponseStatus.IsSuccess, ResponseMessage = "Çıkış işlemi Başarılı" };
+                                    return new ServiceResult<UserEntryExitLoginDto> { ResponseStatus = ResponseStatus.IsSuccess, ResponseMessage = "Çıkış işlemi Başarılı" };
                                 }
                                 else
                                 {
-                                    return new ServiceResult<UserBarcodeLoginDto> { ResponseStatus = ResponseStatus.IsError, ResponseMessage = "Çıkış işleminde Hata Oluştu" };
+                                    return new ServiceResult<UserEntryExitLoginDto> { ResponseStatus = ResponseStatus.IsError, ResponseMessage = "Çıkış işleminde Hata Oluştu" };
                                 }
                             }
                         }
-                        return new ServiceResult<UserBarcodeLoginDto> { ResponseStatus = ResponseStatus.IsSuccess };
+                        return new ServiceResult<UserEntryExitLoginDto> { ResponseStatus = ResponseStatus.IsSuccess };
                     }
                     else
                     {
-                        return new ServiceResult<UserBarcodeLoginDto> { ResponseStatus = ResponseStatus.IsError, ResponseMessage = "Hata Oluştu" };
+                        return new ServiceResult<UserEntryExitLoginDto> { ResponseStatus = ResponseStatus.IsError, ResponseMessage = "Hata Oluştu" };
                     }
                 }
                 else
                 {
                     string resultMessage = $"Kullanıcının sistemde {(device == null ? "cihaz" : "mağaza")} bilgisi yok, giriş yapılamadı.";
-                    return new ServiceResult<UserBarcodeLoginDto> { ResponseStatus = ResponseStatus.IsError, ResponseMessage = resultMessage };
+                    return new ServiceResult<UserEntryExitLoginDto> { ResponseStatus = ResponseStatus.IsError, ResponseMessage = resultMessage };
                 }
             }
             else
             {
-                return new ServiceResult<UserBarcodeLoginDto> { ResponseStatus = ResponseStatus.IsError, ResponseMessage = "Kullanıcının Girişi Yapılamadı" };
+                return new ServiceResult<UserEntryExitLoginDto> { ResponseStatus = ResponseStatus.IsError, ResponseMessage = "Kullanıcının Girişi Yapılamadı" };
             }
         }
     }

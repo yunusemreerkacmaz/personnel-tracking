@@ -4,8 +4,8 @@ export interface CrudTimeDto {
     updateTime?: string | null;
 }
 export interface DateRangeDto {
-    startDate: string | null;
-    endDate: string | null;
+    startDate: string | undefined;
+    endDate: string | undefined;
 }
 export interface TimeDto {
     startDate: string | null   // seçilen zanaman

@@ -39,9 +39,9 @@ namespace Bussiness.Services.UserService.Dtos
         public string? Password { get; set; }
     }
 
-    public class UserBarcodeLoginDto
+    public class UserEntryExitLoginDto
     {
         public UserDto UserDto { get; set; }
-        public bool? IsApproval { get; set; }
+        public bool? IsApproval { get; set; }  // Admin giriş - çıkış onayı
     }
 }

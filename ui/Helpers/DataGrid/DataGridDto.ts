@@ -1,4 +1,7 @@
 import { initialLoginDto, LoginDto } from "../../Components/Login/Dtos/LoginDto"
+import { EntranceOrExitTypeEnum } from "../../Enums/EntranceTypeEnum"
+import { EntryExitEnum } from "../../Enums/EntryExitEnum"
+import { DateRangeDto, TimeDto } from "./CrudTimeDto"
 
 export interface PaginationDto{
     page:number
@@ -7,6 +10,13 @@ export interface PaginationDto{
     total:number
     from:number,
     to:number
+    filterDto:FilterDto | null
+}
+   export interface FilterDto {
+    dateRangeDto: DateRangeDto;
+    timeDto: TimeDto
+    entryTypeEnum: EntranceOrExitTypeEnum;
+    exitTypeEnum: EntranceOrExitTypeEnum;
 }
 export const initialPaginationDto:PaginationDto={
     page: 0,
@@ -14,7 +24,8 @@ export const initialPaginationDto:PaginationDto={
     loginDto: initialLoginDto,
     total: 0,
     from: 0,
-    to: 0
+    to: 0,
+    filterDto: null
 }
 export interface DataGridDto<T> {
     inputs: T[]

@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react'
-import { View, Text, TouchableOpacity, FlatList, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Modal, Linking } from 'react-native';
 import { Avatar, Button, Card, Divider, HelperText, IconButton, List, MD3Colors, RadioButton, Searchbar, TextInput, Switch, Chip } from 'react-native-paper';
 import { GetUserDto, HelperTextDto, initialHelperTextDto } from './Dtos/userDto';
 import { ResponseStatus } from '../../../ServiceResults/serviceResult';
@@ -15,7 +15,8 @@ import TimePickerRangeModal from '../../Stores/timePickerRangeModal';
 import { HelperTextTimeDto, initialHelperTextTimeDto, TimeDto } from '../../../Helpers/DataGrid/CrudTimeDto';
 import { ToastShowParamsCustomType } from '../../../Helpers/Toast/ToastDto';
 import { ScrollView } from 'react-native-gesture-handler';
-
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../Store/store';
 
 export default function UpdateUserComponent() {
     const [searchUserValue, setSearchUserValue] = useState("");
@@ -72,7 +73,7 @@ export default function UpdateUserComponent() {
                     />
                 }
                 data={searchUser ?? users}
-                style={{width:'100%'}}
+                style={{ width: '100%' }}
                 renderItem={({ item, index }) => <UserItem key={index} selectedUserItem={item} />}
                 keyExtractor={item => item.id.toString()}
             />
@@ -88,6 +89,33 @@ const UserItem: React.FC<UserItemProps> = React.memo(({ selectedUserItem }) => {
     const handleOpenModal = () => setVisible(true)
     const handleCloseModal = () => setVisible(false)
     const [selectedUser, setSelectedUser] = useState<GetUserDto>(selectedUserItem)
+
+    const openWhatsApp = (phoneNumber: string) => {
+        
+        phoneNumber = phoneNumber.startsWith("9") && phoneNumber[3]!=="0" ? phoneNumber : "90" + phoneNumber
+        let message = 'Merhaba, size bir sorum var.';
+        let url = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
+
+        Linking.canOpenURL(url)
+            .then((supported) => {
+                if (supported) {
+                    return Linking.openURL(url);
+                } else {
+                    alert("WhatsApp yüklü değil.");
+                }
+            })
+            .catch((err) => console.error("Hata:", err));
+    };
+
+
+    const makePhoneCall = (phoneNumber: string) => {
+        phoneNumber = phoneNumber.startsWith("0") ? phoneNumber : "0" + phoneNumber
+        phoneNumber = `tel:${phoneNumber}`; // 0 ile başlarsa da çalışır
+        Linking.openURL(phoneNumber).catch(err => {
+            console.error("Arama yapılamadı", err);
+        });
+    };
+
     return <>
         <View style={{ minWidth: '100%', justifyContent: 'center', height: 45 }}>
             <List.Item
@@ -96,13 +124,31 @@ const UserItem: React.FC<UserItemProps> = React.memo(({ selectedUserItem }) => {
                 titleStyle={{ justifyContent: 'center' }}
                 style={{ flex: 1, justifyContent: 'center' }} // Yüksekliği azaltmak için
                 right={() => (
-                    <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
                         <IconButton
                             icon="account-edit"
                             selected
                             iconColor={selectedUserItem.isActive ? 'green' : 'red'}
                             size={24}
                             onPress={handleOpenModal} />
+
+                        <IconButton
+                            icon="whatsapp"
+                            selected
+                            iconColor={"green"}
+                            size={24}
+                            onPress={() => {
+                                openWhatsApp(selectedUserItem.phoneNumber)
+                            }} />
+
+                        <IconButton
+                            icon="phone"
+                            selected
+                            iconColor={"#FFB800"}
+                            size={24}
+                            onPress={() => {
+                                makePhoneCall(selectedUserItem.phoneNumber)
+                            }} />
                     </View>
                 )}
             />
@@ -135,16 +181,19 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
     const [infoMessage, setInfoMessage] = useState<boolean>(false)
     const [shiftTime, setShiftTime] = useState<TimeDto>(selectedUser.shiftTime)
     const [reset, setReset] = useState<boolean>(false)
+    const loginState = useSelector((state: RootState) => state.login)
 
     var isAdmin = false
     var isStoreAdmin = false
 
-    if (selectedUser.roleDto.id === 1) {
+    if (loginState.roleDto.id === 1) {
         isAdmin = true
     }
-    if (selectedUser.roleDto.id === 2) {
+    if (loginState.roleDto.id === 2) {
         isStoreAdmin = true
     }
+
+
 
     const handleUserExpand = () => setuserExpandListAction(!userExpandListAction)
     const handleStoreExpand = () => setStoreExpandListAction(!storeExpandListAction)
@@ -373,7 +422,7 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
                                     onChangeText={text => { handleChange(text, "userName") }}
                                     value={selectedUser.userName}
                                     label="Kullanıcı Adı girin . . ."
-                                    style={{ width: 350, minWidth: '75%', height: 40 }}
+                                    style={{ width: '90%', minWidth: '75%', height: 40 }}
                                     error={formHelperText.userName}
                                 />
                                 {formHelperText.userName && <HelperText type="error" visible={formHelperText.userName}>Lütfen Kullanıcı Adı Girin</HelperText>}
@@ -383,7 +432,7 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
                                     onChangeText={text => { handleChange(text, 'password') }}
                                     value={selectedUser.password}
                                     label="Şifre girin . . ."
-                                    style={{ width: 350, minWidth: '75%', height: 40 }}
+                                    style={{ width: '90%', minWidth: '75%', height: 40 }}
                                     error={formHelperText.password}
                                 />
                                 {formHelperText.password && <HelperText type="error" visible={formHelperText.password}>Lütfen Şifre Girin</HelperText>}
@@ -393,7 +442,7 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
                                     onChangeText={text => { handleChange(text, 'firstName') }}
                                     value={selectedUser.firstName}
                                     label="Adı girin . . ."
-                                    style={{ width: 350, minWidth: '75%', height: 40 }}
+                                    style={{ width: '90%', minWidth: '75%', height: 40 }}
                                     error={formHelperText.firstName}
                                 />
                                 {formHelperText.firstName && <HelperText type="error" visible={formHelperText.firstName}>Lütfen Adınızı Girin</HelperText>}
@@ -403,7 +452,7 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
                                     onChangeText={text => { handleChange(text, 'lastName') }}
                                     value={selectedUser.lastName}
                                     label="Soyadı girin . . ."
-                                    style={{ width: 350, minWidth: '75%', height: 40 }}
+                                    style={{ width: '90%', minWidth: '75%', height: 40 }}
                                     error={formHelperText.lastName}
                                 />
                                 {formHelperText.lastName && <HelperText type="error" visible={formHelperText.lastName}>Lütfen Soyadınızı Girin</HelperText>}
@@ -413,7 +462,7 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
                                     onChangeText={text => { handleChange(text, 'email') }}
                                     value={selectedUser.email}
                                     label="Email girin . . ."
-                                    style={{ width: 350, minWidth: '75%', height: 40 }}
+                                    style={{ width: '90%', minWidth: '75%', height: 40 }}
                                     error={formHelperText.email}
                                 />
                                 {formHelperText.email && <HelperText type="error" visible={formHelperText.email}>Lütfen Emailinizi Girin</HelperText>}
@@ -423,11 +472,11 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
                                     onChangeText={text => { handleChange(text, 'phoneNumber') }}
                                     value={selectedUser.phoneNumber}
                                     label="Telefon Numarası Girin . . ."
-                                    style={{ width: 350, minWidth: '75%', height: 40 }}
+                                    style={{ width: '90%', minWidth: '75%', height: 40 }}
                                     error={formHelperText.phoneNumber}
                                 />
                                 {formHelperText.phoneNumber && <HelperText type="error" visible={formHelperText.phoneNumber}>Lütfen Geçerli bir Telfon Numarası Girin</HelperText>}
-                                <List.Section style={{ width: 350, minWidth: '75%', maxWidth: '100%', display: 'flex', alignItems: 'flex-start' }}>
+                                <List.Section style={{ width: '90%', minWidth: '75%', maxWidth: '100%', display: 'flex', alignItems: 'flex-start' }}>
                                     <List.Accordion
                                         expanded={userExpandListAction}
                                         onPress={handleUserExpand}
@@ -498,7 +547,7 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
                                     </List.Accordion>
                                 </List.Section>
                                 {formHelperText.roleDto && <HelperText type="error" visible={formHelperText.roleDto}>Lütfen Yetkiyi Seçin</HelperText>}
-                                <List.Section style={{ width: 350, minWidth: '75%', maxWidth: '100%', display: 'flex', alignItems: 'flex-start', marginTop: 1 }}>
+                                <List.Section style={{ width: '90%', minWidth: '75%', maxWidth: '100%', display: 'flex', alignItems: 'flex-start', marginTop: 1 }}>
                                     <List.Accordion
                                         expanded={storeExpandListAction}
                                         onPress={handleStoreExpand}
@@ -625,7 +674,7 @@ const UpdateUserModal: React.FC<UpdateUserModalProps> = React.memo(({ handleClos
                                         titleStyle={[{ fontWeight: 'bold', fontSize: 18, marginLeft: 12 }, isActive ? { color: 'green' } : { color: 'red' }]}
                                         style={{ justifyContent: 'center', alignItems: 'center' }}
                                         left={() => <>
-                                            <Switch value={isActive} trackColor={{ true: "#79AB54", false: "#D5819A" }} thumbColor={(isAdmin || isStoreAdmin) ? "gray" : isActive ? "green" : "red"} color={(isStoreAdmin || isAdmin) ? "gray" : isActive ? "green" : "red"} onValueChange={onToggleSwitch} disabled={isStoreAdmin || isAdmin} />
+                                            <Switch value={isActive} trackColor={{ true: "#79AB54", false: "#D5819A" }} thumbColor={(isStoreAdmin) ? "gray" : isActive ? "green" : "red"} color={(isStoreAdmin) ? "gray" : isActive ? "green" : "red"} onValueChange={onToggleSwitch} disabled={isStoreAdmin} />
                                         </>}
                                         right={() =>
                                             <TouchableOpacity>
