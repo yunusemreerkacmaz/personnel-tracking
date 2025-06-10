@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Avatar, Card, Chip, Divider, IconButton } from 'react-native-paper'
 import { GetUserDto } from '../Admin/AddUser/Dtos/userDto'
-import { Modal, ScrollView, View, Text } from 'react-native'
+import { Modal, ScrollView, View } from 'react-native'
 
 type IProps = {
     selectedUserItem: GetUserDto,
@@ -96,8 +96,5 @@ export default function UserInfoModal(props: IProps) {
                 </View>
             </View>
         </Modal>
-
-
-
     )
 }

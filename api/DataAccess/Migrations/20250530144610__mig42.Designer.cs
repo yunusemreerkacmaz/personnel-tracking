@@ -4,6 +4,7 @@ using DataAccess.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(PersonnelTrackingContext))]
-    partial class PersonnelTrackingContextModelSnapshot : ModelSnapshot
+    [Migration("20250530144610__mig42")]
+    partial class _mig42
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -267,9 +270,6 @@ namespace DataAccess.Migrations
                     b.Property<string>("Thursday")
                         .HasColumnType("varchar(30)");
 
-                    b.Property<string>("TotalShiftTime")
-                        .HasColumnType("longtext");
-
                     b.Property<string>("Tuesday")
                         .HasColumnType("varchar(30)");
 
@@ -444,7 +444,7 @@ namespace DataAccess.Migrations
                     b.Property<string>("Thursday")
                         .HasColumnType("varchar(30)");
 
-                    b.Property<string>("TotalWorkTime")
+                    b.Property<string>("TotalTime")
                         .HasColumnType("varchar(30)");
 
                     b.Property<string>("Tuesday")

@@ -1,5 +1,5 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import React, { useCallback } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { View, Text } from 'react-native';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { DrawerParamList } from '../../Navigator/navigator';
@@ -22,6 +22,7 @@ import { EntryExitEnum } from '../../Enums/EntryExitEnum';
 import { entryExitCheckStore } from '../EntryExit/Requests/entryExitStore';
 import { EntryExitDto } from '../EntryExit/Dtos/EntryExitDto';
 import { iconVisibleStatus } from '../EntryExit/Requests/entryExitSlice';
+import Animated, { BounceInDown, BounceInRight, BounceInUp, ReduceMotion } from 'react-native-reanimated';
 
 export default function ProfileComponent() {
   type NavigationProps = DrawerNavigationProp<DrawerParamList, 'Home', 'Profile'>;
@@ -32,6 +33,8 @@ export default function ProfileComponent() {
   const [expanded, setExpanded] = React.useState(false);
   const locationState = useSelector((state: RootState) => state.location)
   const entryExitState = useSelector((state: RootState) => state.entryExit)
+
+const [animationKey, setAnimationKey] = useState(0);
 
   const handleExpand = () => setExpanded(!expanded);
 
@@ -123,13 +126,19 @@ export default function ProfileComponent() {
   // }
 
   useFocusEffect(
+  React.useCallback(() => {
+    setAnimationKey(prev => prev + 1);
+  }, [])
+);
+
+  useFocusEffect(
     useCallback(() => {
+    
       dispatch(deviceInfoStore());
       if (loginState.isLoggedIn && loginState.userDto.id > 0 && deviceInfoState.brand && deviceInfoState.modelName) {
         if (locationState.coords.latitude && locationState.coords.longitude && deviceInfoState != initialDeviceInformationDto) {
           handleCheckDevice()
           handleEntryExitCheck()
-          // handleBiometricCheck()
         }
       }
     }, [deviceInfoState.brand, deviceInfoState.modelName, loginState.roleDto.id, locationState.coords.latitude, locationState.coords.longitude])
@@ -267,7 +276,7 @@ export default function ProfileComponent() {
     </List.Section>
   )
   return (
-    <View>
+    <Animated.View entering={BounceInRight.delay(300)} key={`BounceInRight-${animationKey}`}>
       <ScrollView>
         <LinearGradient
           colors={['#a18cd1', '#fbc2eb']} // "#8172C6", '#92BBE7', "#F58484", "#FF4B4B", '#ECAFAF'
@@ -286,9 +295,13 @@ export default function ProfileComponent() {
             <PersonnelCardInfoComponent />
           </Card.Content>
         </LinearGradient>
-        <DeviceComponent />
+        <Animated.View entering={BounceInUp.delay(500).duration(2000)} >
+        <DeviceComponent/>
+        </Animated.View>
+        <Animated.View entering={BounceInDown.delay(700).duration(2500)} >
         <LocationComponent />
+        </Animated.View>
       </ScrollView>
-    </View>
+    </Animated.View>
   )
 }

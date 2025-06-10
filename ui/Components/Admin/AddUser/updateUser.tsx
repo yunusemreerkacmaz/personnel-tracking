@@ -17,6 +17,8 @@ import { ToastShowParamsCustomType } from '../../../Helpers/Toast/ToastDto';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../Store/store';
+import Animated, { FlipInEasyX } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function UpdateUserComponent() {
     const [searchUserValue, setSearchUserValue] = useState("");
@@ -44,84 +46,56 @@ export default function UpdateUserComponent() {
             [],
         )
     )
-
     const handleSearch = async () => {
         let searchValues = users.filter(x => x.firstName.toLowerCase().trim().includes(searchUserValue.toLowerCase().trim()) || x.lastName.toLowerCase().trim().includes(searchUserValue.toLowerCase().trim()))
         setSearchUser(searchValues)
     }
-
     const handleClear = async () => { setSearchUser(users) }
-
     const UpdateUserLeftContent = (props: any) => <Avatar.Icon {...props} color='yellow' icon="account" />
 
     return (
         <Card elevation={5} style={{ flex: 1, marginTop: 10, margin: 10, }}>
-            <Card.Title subtitleStyle={{ opacity: 0.5 }} titleStyle={{ fontWeight: 'bold' }} title="KULLANICIYI GÜNCELLE" subtitle="Güncellenmesini istediğiniz kullanıcıyı arayın" left={UpdateUserLeftContent} />
-            <Divider />
-
-            <FlatList
-                ListHeaderComponent={
-                    <Searchbar
-                        placeholder="Kullanıcı Ara..."
-                        placeholderTextColor={"gray"}
-                        onChangeText={setSearchUserValue}
-                        value={searchUserValue}
-                        onIconPress={async () => { await handleSearch() }}
-                        onClearIconPress={async () => { await handleClear() }}
-                        style={{ margin: 10, justifyContent: 'center', borderWidth: 1, borderColor: '#ACC8E5' }}
-                        showDivider
-                    />
-                }
-                data={searchUser ?? users}
-                style={{ width: '100%' }}
-                renderItem={({ item, index }) => <UserItem key={index} selectedUserItem={item} />}
-                keyExtractor={item => item.id.toString()}
-            />
-
+            <LinearGradient colors={['black', '#3F638C']} style={{width:'100%',height:'100%', borderRadius: 20}}>
+                <Card.Title subtitleStyle={{ opacity: 0.5,color:'white' }} titleStyle={{ fontWeight: 'bold',color:'#64ff70' }} title="KULLANICIYI GÜNCELLE" subtitle="Güncellenmesini istediğiniz kullanıcıyı arayın" left={UpdateUserLeftContent} />
+                <Divider />
+                <FlatList
+                    ListHeaderComponent={
+                        <Searchbar
+                            placeholder="Kullanıcı Ara..."
+                            placeholderTextColor={"gray"}
+                            onChangeText={setSearchUserValue}
+                            value={searchUserValue}
+                            onIconPress={async () => { await handleSearch() }}
+                            onClearIconPress={async () => { await handleClear() }}
+                            style={{ margin: 10, justifyContent: 'center', borderWidth: 1, borderColor: '#ACC8E5' }}
+                            showDivider
+                        />
+                    }
+                    data={searchUser ?? users}
+                    style={{ width: '100%' }}
+                    renderItem={({ item, index }) => <UserItem key={index} selectedUserItem={item} />}
+                    keyExtractor={item => item.id.toString()}
+                />
+            </LinearGradient>
         </Card>
     )
 }
 
 type UserItemProps = { selectedUserItem: GetUserDto };
-
 const UserItem: React.FC<UserItemProps> = React.memo(({ selectedUserItem }) => {                // Kişi listesi
     const [visible, setVisible] = useState<boolean>(false)
     const handleOpenModal = () => setVisible(true)
     const handleCloseModal = () => setVisible(false)
     const [selectedUser, setSelectedUser] = useState<GetUserDto>(selectedUserItem)
 
-    const openWhatsApp = (phoneNumber: string) => {
-        
-        phoneNumber = phoneNumber.startsWith("9") && phoneNumber[3]!=="0" ? phoneNumber : "90" + phoneNumber
-        let message = 'Merhaba, size bir sorum var.';
-        let url = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
-
-        Linking.canOpenURL(url)
-            .then((supported) => {
-                if (supported) {
-                    return Linking.openURL(url);
-                } else {
-                    alert("WhatsApp yüklü değil.");
-                }
-            })
-            .catch((err) => console.error("Hata:", err));
-    };
-
-
-    const makePhoneCall = (phoneNumber: string) => {
-        phoneNumber = phoneNumber.startsWith("0") ? phoneNumber : "0" + phoneNumber
-        phoneNumber = `tel:${phoneNumber}`; // 0 ile başlarsa da çalışır
-        Linking.openURL(phoneNumber).catch(err => {
-            console.error("Arama yapılamadı", err);
-        });
-    };
-
     return <>
-        <View style={{ minWidth: '100%', justifyContent: 'center', height: 45 }}>
+        <Animated.View
+            entering={FlipInEasyX.delay(100 * (selectedUserItem.id))}
+            style={{ minWidth: '100%', justifyContent: 'center', height: 45 }}>
             <List.Item
                 title={`${selectedUserItem.firstName} ${selectedUserItem.lastName}`}
                 key={selectedUserItem.id}
-                titleStyle={{ justifyContent: 'center' }}
+                titleStyle={{ justifyContent: 'center',color:'white' }}
                 style={{ flex: 1, justifyContent: 'center' }} // Yüksekliği azaltmak için
                 right={() => (
                     <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
@@ -131,29 +105,11 @@ const UserItem: React.FC<UserItemProps> = React.memo(({ selectedUserItem }) => {
                             iconColor={selectedUserItem.isActive ? 'green' : 'red'}
                             size={24}
                             onPress={handleOpenModal} />
-
-                        <IconButton
-                            icon="whatsapp"
-                            selected
-                            iconColor={"green"}
-                            size={24}
-                            onPress={() => {
-                                openWhatsApp(selectedUserItem.phoneNumber)
-                            }} />
-
-                        <IconButton
-                            icon="phone"
-                            selected
-                            iconColor={"#FFB800"}
-                            size={24}
-                            onPress={() => {
-                                makePhoneCall(selectedUserItem.phoneNumber)
-                            }} />
                     </View>
                 )}
             />
             <Divider />
-        </View>
+        </Animated.View>
         {visible && selectedUserItem.id > 0 && <UpdateUserModal handleCloseModal={handleCloseModal} visible={visible} selectedUser={selectedUser} setSelectedUser={setSelectedUser} selectedUserItem={selectedUserItem} />}
     </>
 });

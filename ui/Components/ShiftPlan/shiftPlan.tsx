@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react'
 import { View, StyleSheet, Dimensions, TouchableOpacity } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
-import { GetShiftPlans } from './Requests/store'
+import { GetUserShiftPlans } from './Requests/store'
 import { initialShiftPlanDto, ShiftPlanDto, TableBodyDto } from './Dtos/shipPlanDto'
 import { ResponseStatus } from '../../ServiceResults/serviceResult'
 import Toast from 'react-native-toast-message'
@@ -13,18 +13,21 @@ import { RootState } from '../../Store/store'
 import { Avatar, Card, Chip, Text } from 'react-native-paper'
 import { ScrollView } from 'react-native-gesture-handler'
 import { DaysOfWeekShortValueEnumEN, PermissionsShortKeyEnum, PermissionsShortValueEnum } from '../../Enums/AbbreviationsEnum'
+import Animated, { BounceInLeft, BounceInRight } from 'react-native-reanimated'
 
 export default function ShiftPlanComponent() {
   const loginState = useSelector((state: RootState) => state.login)
   const [headers, setHeaders] = useState<DaysOfWeekDto[]>([loginState.userDto.id !== 1 ? { key: "H", titleTR: "Haftalar", titleEN: "weeks" } : { key: "K", titleEN: "users", titleTR: "Kullanıcılar" }, ...daysOfWeek, { key: "TS", titleEN: "totalTime", titleTR: "Toplam Saat" }])
   const [shiftPlans, setShiftPlans] = useState<ShiftPlanDto>(initialShiftPlanDto)
   const screenOrientation = useSelector((state: RootState) => state.screenOrientationSlice)
-  const [abbreviationPermissions, setAbbreviationPermissions] = useState<AbbreviationLetterDto[]>([loginState.userDto.id !== 1 ? { key: "H", title: "Haftalar" } : { key: "K", title: "Kullanıcılar" },...abbreviationLetterPermissions, { key: "TS", title: "Toplam Saat" }])
+  const [abbreviationPermissions, setAbbreviationPermissions] = useState<AbbreviationLetterDto[]>([loginState.userDto.id !== 1 ? { key: "H", title: "Haftalar" } : { key: "K", title: "Kullanıcılar" }, ...abbreviationLetterPermissions, { key: "TS", title: "Toplam Saat" }])
+    const [animatedKey, setAnimatedKey] = useState<number>(0)
 
   useFocusEffect(
     React.useCallback(() => {
+      setAnimatedKey(prev=>prev+1)
       let getPersonnels = async () => {
-        let response = await GetShiftPlans(loginState.isLoggedIn ? loginState.userDto.id : 0)
+        let response = await GetUserShiftPlans(loginState.isLoggedIn ? loginState.userDto.id : 0)
         if (response?.responseStatus === ResponseStatus.IsSuccess) {
           setShiftPlans(response.result)
         }
@@ -117,8 +120,8 @@ export default function ShiftPlanComponent() {
           }
         }
         else {                                                                           // Personnel ise
-            if (header.key === "H") {
-            return <Text style={{fontSize:8}}>{moment(item["createTime"] as Date | null).format('DD.MM.YYYY')}</Text>
+          if (header.key === "H") {
+            return <Text style={{ fontSize: 8 }}>{moment(item["createTime"] as Date | null).format('DD.MM.YYYY')}</Text>
           }
         }
         if (cellValue === PermissionsShortValueEnum.ÜSZİ) {
@@ -189,13 +192,13 @@ export default function ShiftPlanComponent() {
       else if (letter.key == PermissionsShortKeyEnum.Resmi_Tatil) {
         return { backgroundColor: '#c97c5d' }
       }
-       else if (letter.key == PermissionsShortKeyEnum.Vardiya) {
+      else if (letter.key == PermissionsShortKeyEnum.Vardiya) {
         return { backgroundColor: '#92e6a7' }
       }
       else if (letter.key == "TS") {
         return { backgroundColor: '#bbdefb' }
       }
-      else if (letter.key == "K" ||letter.key=="H") {
+      else if (letter.key == "K" || letter.key == "H") {
         return { backgroundColor: '#faedcd' }
       }
     }
@@ -318,8 +321,12 @@ export default function ShiftPlanComponent() {
   return (
     <View style={{ flex: 1 }}>
       <ScrollView>
-        <UserShiftPlanComponent />
-        <TableAbbreviation />
+        <Animated.View entering={BounceInLeft.delay(200).duration(1500)} key={`left-${animatedKey}`}>
+          <UserShiftPlanComponent />
+        </Animated.View>
+        <Animated.View entering={BounceInRight.delay(400).duration(1500)} key={`right-${animatedKey}`}>
+          <TableAbbreviation />
+        </Animated.View>
       </ScrollView>
     </View>
   );

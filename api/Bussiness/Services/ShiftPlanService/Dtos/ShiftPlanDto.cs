@@ -21,6 +21,7 @@ namespace Bussiness.Services.ShiftPlanService.Dtos
         public string? TotalTime { get; set; }      // haftada saat ve dakika toplamı 43:30 ---> 43 saat 30 dakika
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
+        public string? ShiftPlanName { get; set; }
     }
     public class TableHeaderDto
     {
@@ -31,5 +32,26 @@ namespace Bussiness.Services.ShiftPlanService.Dtos
         public DateTime? FridayDate { get; set; }    // vardiya Tarihleri 30.05.2025
         public DateTime? SaturdayDate { get; set; }  // vardiya Tarihleri 31.05.2025
         public DateTime? SundayDate { get; set; }    // vardiya Tarihleri 01.06.2025
+    }
+    public class FilterShiftPlanDto
+    {
+        public string? Searchtext { get; set; }
+    }
+
+    public class PermissionsDto
+    {
+        public string? Monday { get; set; }     // vardiya saatleri 09:18:00
+        public string? Tuesday { get; set; }
+        public string? Wednesday { get; set; }
+        public string? Thursday { get; set; }
+        public string? Friday { get; set; }
+        public string? Saturday { get; set; }
+        public string? Sunday { get; set; }
+    }
+
+    public class CreateShiftDto
+    {
+        public PermissionsDto Permissions  { get; set; }
+        public string ShiftPlanName { get; set; }
     }
 }

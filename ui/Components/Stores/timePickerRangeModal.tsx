@@ -20,7 +20,7 @@ export default function TimePickerRangeModal(props: IProps) {
     const [localTime, setLocalTime] = useState<TimeDto>(initialTimeDto)
 
     if (storeTime.startDate != localTime.startDate || storeTime.endDate != localTime.endDate) {  // localtime değiştiğinde çalışacak alan
-        if (storeTime.startDate && storeTime.endDate) {
+        if (true) {  // storeTime.startDate && storeTime.endDate
             setLocalTime(prev => ({
                 ...prev,
                 endDate: storeTime.endDate,

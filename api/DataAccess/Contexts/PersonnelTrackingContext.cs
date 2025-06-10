@@ -18,5 +18,7 @@ namespace DataAccess.Contexts
         public DbSet<Device> Devices { get; set; }
         public DbSet<EntryExitRecord> EntryExitRecords { get; set; }
         public DbSet<ShiftPlan> ShiftPlans { get; set; }
+        public DbSet<UserShiftPlan> UserShiftPlans { get; set; }
+
     }
 }

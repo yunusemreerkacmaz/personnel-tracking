@@ -1,16 +1,27 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useState } from 'react';
 import { BottomNavigation, Provider, IconButton } from 'react-native-paper';
 import PhoneScreen from './phone';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import WhatsappScreen from './whatsapp';
 import MessageScreen from './message';
 import HomeScreen from './Requests/home';
 import EmailScreen from './email';
+import Animated, { FadeInLeft } from 'react-native-reanimated';
 
 export default function ContactComponent() {
     const [index, setIndex] = useState(0);
     const navigation = useNavigation<any>();
+    const [animatedKey, setAnimatedKey] = useState(0)
+
+    useFocusEffect(
+        useCallback(
+            () => {
+                setAnimatedKey(prev => prev + 1)
+            },
+            [],
+        )
+    )
 
     const routes = [
         { key: 'phone', title: 'Telefon', icon: 'phone', color: '#0E6FD6' },
@@ -24,11 +35,11 @@ export default function ContactComponent() {
             case 'phone':
                 return <HomeScreen renderItem={(selectedUserItem) => <PhoneScreen selectedUserItem={selectedUserItem} />} />
             case 'whatsapp':
-                return <HomeScreen renderItem={(selectedUserItem) => <WhatsappScreen selectedUserItem={selectedUserItem} />} />;
+                return <HomeScreen renderItem={(selectedUserItem) => <WhatsappScreen selectedUserItem={selectedUserItem} />} />
             case 'message':
-                return <HomeScreen renderItem={(selectedUserItem) => <MessageScreen selectedUserItem={selectedUserItem} />} />;
+                return <HomeScreen renderItem={(selectedUserItem) => <MessageScreen selectedUserItem={selectedUserItem} />} />
             case 'mail':
-                return <HomeScreen renderItem={(selectedUserItem) => <EmailScreen selectedUserItem={selectedUserItem} />} />;
+                return <HomeScreen renderItem={(selectedUserItem) => <EmailScreen selectedUserItem={selectedUserItem} />} />
             default:
                 return null;
         }
@@ -36,6 +47,7 @@ export default function ContactComponent() {
 
     return (
         <Provider>
+
             {renderScene({ route: routes[index] })}
             <BottomNavigation.Bar
                 navigationState={{ index, routes }}
@@ -45,13 +57,15 @@ export default function ContactComponent() {
                         setIndex(newIndex);
                     }
                 }}
-                renderIcon={({ route, color }) => (
-                    <IconButton
-                        icon={route.icon}
-                        iconColor={route.color}
-                        size={24}
-                        style={{ bottom: 12 }}
+                renderIcon={({ route, color, }) => (
+                    <Animated.View entering={FadeInLeft.duration(500).delay(500)} key={animatedKey}>
+                        <IconButton
+                            icon={route.icon}
+                            iconColor={route.color}
+                            size={24}
+                            style={{ bottom: 12 }}
                         />
+                    </Animated.View>
                 )}
                 getLabelText={({ route }) => route.title}
             />

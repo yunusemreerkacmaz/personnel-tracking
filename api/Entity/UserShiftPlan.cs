@@ -4,10 +4,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Entity
 {
-    public class ShiftPlan : CrudTime, IEntity
+    public class UserShiftPlan : CrudTime, IEntity
     {
         public int Id { get; set; }
-        public string? ShiftPlanName { get; set; }
+        public int UserId { get; set; }
+        public int ShiftPlanId { get; set; }
         [Column(TypeName = "varchar(30)")]
         public string? Monday { get; set; }
         [Column(TypeName = "varchar(30)")]
@@ -24,6 +25,7 @@ namespace Entity
         public string? Sunday { get; set; }
         [Column(TypeName = "varchar(30)")]
         public bool IsDeleted { get; set; }
-        public string? TotalShiftTime { get; set; } // haftada saat ve dakika toplamı 43:30 ---> 43 saat 30 dakika
+        [Column(TypeName = "varchar(30)")]
+        public string? TotalWorkTime { get; set; } // haftada saat ve dakika toplamı 43:30 ---> 43 saat 30 dakika
     }
 }

@@ -1,4 +1,4 @@
-import { createDrawerNavigator, DrawerContentScrollView, DrawerItem, DrawerNavigationProp } from '@react-navigation/drawer';
+import { createDrawerNavigator, DrawerContentScrollView, DrawerItem, DrawerNavigationProp, useDrawerStatus } from '@react-navigation/drawer';
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import LoginComponent from '../Components/Login/login';
 import HomeComponent from '../Components/Home/home';
@@ -7,7 +7,7 @@ import { ActivityIndicator, Avatar, Badge, IconButton, MD2Colors, MD3Colors, Tex
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../Store/store';
 import { View, Image, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import BarcodeComponent from '../Components/EntryExit/barcode'
 import { GenderEnum } from '../Enums/GenderEnum';
 import RoleComponent from '../Components/Admin/AddRole';
@@ -30,13 +30,13 @@ import BiometricComponent from '../Components/EntryExit/biometric';
 import { EntryExitEnum } from '../Enums/EntryExitEnum';
 import ContactComponent from '../Components/Contacts';
 import ShiftPlanComponent from '../Components/ShiftPlan';
+import Animated, { BounceInDown, FadeInLeft } from 'react-native-reanimated';
 
 export type DrawerParamList = {
     Profile: undefined;
     login: undefined;
     Barkod: undefined;
     Home: undefined
-    ForgottenPasswordStack: undefined
     Role: undefined
     User: undefined
     forgotPassword: undefined
@@ -51,6 +51,8 @@ export type DrawerParamList = {
 };
 export type NavigationProps = DrawerNavigationProp<DrawerParamList>;
 
+
+
 export default function Navigator() {
     const Drawer = createDrawerNavigator<DrawerParamList>();
     const navigationCamera = useNavigation<NavigationProps>();
@@ -64,6 +66,21 @@ export default function Navigator() {
     const [loadingNotification, setLoadingNotification] = useState<boolean>(true)
     const [tempMessages, setTempMessages] = useState<NotificationDto[]>([])
     const screenOrientation = useSelector((state: RootState) => state.screenOrientationSlice)
+
+    const [animatedKey, setAnimatedKey] = useState<number>(0)
+    // const [animationDuration, setAnimationDuration] = useState(350)
+    // const [animationDelay, setAnimationDelay] = useState(100)
+
+
+
+    useFocusEffect(
+        useCallback(
+            () => {
+                setAnimatedKey(prev => prev + 1)
+            },
+            [],
+        )
+    )
 
     var isAdmin = false
     var isStoreAdmin = false
@@ -89,7 +106,6 @@ export default function Navigator() {
         // Temizleme
         return () => {
             ScreenOrientation.removeOrientationChangeListener(subscription);
-
         };
     }, []);
 
@@ -125,29 +141,6 @@ export default function Navigator() {
             })
         }
     }, [visibleNotification])
-
-    function ForgottenPasswordStack() {
-        return (
-            <Stack.Navigator>
-                <Stack.Screen
-                    name="Login"
-                    component={LoginComponent}
-                    options={{
-                        headerShown: false
-                    }}
-                />
-                <Stack.Screen
-                    name="forgotPassword"
-                    component={ForgotPasswordComponent}
-                    // initialParams={{setVisibleEmail,visibleEmail}}
-                    options={{
-                        title: 'Login Ekranına Dön',
-                        headerStyle: { backgroundColor: '#CDDCEC' }
-                    }}
-                />
-            </Stack.Navigator>
-        );
-    }
 
     function LogoutStack() {
         return (
@@ -199,7 +192,6 @@ export default function Navigator() {
         );
     }
 
-
     const handleIconColor = () => {
         if (entryExitState.barcodeReadEnum || entryExitState.biometricEnum || entryExitState.adminApproveEnum) {
             if ((entryExitState.barcodeReadEnum === EntryExitEnum.Entreance && entryExitState.biometricEnum === EntryExitEnum.Exit) || (entryExitState.barcodeReadEnum === EntryExitEnum.Exit && entryExitState.biometricEnum === EntryExitEnum.Entreance)) {
@@ -250,16 +242,18 @@ export default function Navigator() {
             flexWrap: 'wrap',
         }}>
             {isAdmin &&
-                <View style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                }}>
+                <Animated.View
+                    entering={FadeInLeft.duration(1000).delay(1000)}
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                    }}>
                     <View style={{ width: '100%' }}>
                         {loadingNotification ? <Loading /> : <Badge style={{ position: 'absolute', top: 12, left: 36, zIndex: 9999 }}>{websocket.messages.filter(x => !x.readStatus).length}</Badge>}
                         <IconButton
-                            icon={"cellphone-message"}    // Notification ikonu 
+                            icon={"cellphone-message"}    // Notification ikonu
                             size={30}
                             mode='contained'
                             containerColor='white'
@@ -268,12 +262,14 @@ export default function Navigator() {
                             }}
                         />
                     </View>
-                </View>}
-            <View style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-            }}>
+                </Animated.View>}
+            <Animated.View
+                entering={FadeInLeft.duration(1500).delay(1500)}
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}>
                 <IconButton
                     icon="qrcode-scan"
                     iconColor={handleIconColor()}
@@ -284,22 +280,27 @@ export default function Navigator() {
                         setvisible(false)
                     }}
                 />
-            </View>
-            <IconButton
-                icon="fingerprint"
-                iconColor={handleIconColor()}
-                size={30}
-                disabled={entryExitState.biometricIconVisible}
+            </Animated.View>
+            <Animated.View
+                entering={FadeInLeft.duration(2000).delay(2000)}
+            >
+                <IconButton
+                    icon="fingerprint"
+                    iconColor={handleIconColor()}
+                    size={30}
+                    disabled={entryExitState.biometricIconVisible}
+                    onPress={() => {
+                        navigationCamera.navigate('biometric', { trigger: true } as any)
+                    }}
+                />
+            </Animated.View>
 
-                onPress={() => {
-                    navigationCamera.navigate('biometric', { trigger: true } as any)
-                }}
-            />
         </View>
     }, [navigationCamera, websocket.messages, visibleNotification, loginState.userDto.id, loadingNotification, entryExitState])
 
     const Content = (props: any) => {
         const navigation = props.navigation as DrawerNavigationProp<DrawerParamList>;
+        const isDrawerOpenOrClose = useDrawerStatus();
         return <View style={{ flex: 1, width: '100%', }}>
             <View style={{ flex: 3, width: '100%', justifyContent: 'center', alignItems: 'center', borderBottomWidth: 1, borderColor: '#dcdcdc', flexWrap: 'wrap', paddingTop: 10 }}>
                 <View style={{ flex: 3, justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}>
@@ -317,7 +318,7 @@ export default function Navigator() {
                 </View>
             </View>
             <View style={{ flex: 7 }}>
-                <DrawerContentScrollView>
+                <Animated.ScrollView entering={FadeInLeft.delay(200).duration(700)} key={isDrawerOpenOrClose}>
                     <DrawerItem
                         label={"AnaSayfa"}
                         style={{ backgroundColor: '#D7EBD3', marginBottom: 10 }}
@@ -340,6 +341,7 @@ export default function Navigator() {
                         icon={() => <Avatar.Icon size={27} icon="card-bulleted-settings" />}
                         onPress={() => navigation.navigate('shiftPlan')}
                     ></DrawerItem>
+
                     {isAdmin &&
                         <>
                             <DrawerItem
@@ -349,7 +351,6 @@ export default function Navigator() {
                                 onPress={() => navigation.navigate('Role')}
                             >
                             </DrawerItem>
-
                             <DrawerItem
                                 label={"Kurum İşlemleri"}
                                 style={{ backgroundColor: '#D7EBD3', marginBottom: 10 }}
@@ -361,7 +362,6 @@ export default function Navigator() {
                     }
                     {(isAdmin || isStoreAdmin) &&
                         <>
-
                             <DrawerItem
                                 label={"Kullanıcı İşlemleri"}
                                 style={{ backgroundColor: '#D7EBD3', marginBottom: 10 }}
@@ -403,7 +403,7 @@ export default function Navigator() {
                         >
                         </DrawerItem>
                     }
-                </DrawerContentScrollView>
+                </Animated.ScrollView>
             </View>
         </View>
     }
@@ -434,7 +434,12 @@ export default function Navigator() {
             />
             <Drawer.Screen
                 name="login"
-                component={ForgottenPasswordStack}
+                component={LoginComponent}
+                options={{ drawerStyle: { width: 250 }, title: "" }}
+            />
+            <Drawer.Screen
+                name="forgotPassword"
+                component={ForgotPasswordComponent}
                 options={{ drawerStyle: { width: 250 } }}
             />
             <Drawer.Screen

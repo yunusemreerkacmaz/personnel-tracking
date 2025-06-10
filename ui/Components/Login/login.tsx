@@ -1,5 +1,5 @@
 import { CommonActions, useFocusEffect, useNavigation } from '@react-navigation/native';
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { View, SafeAreaView, StyleSheet, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { DrawerParamList } from '../../Navigator/navigator';
@@ -16,6 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { initialRoleDto } from '../Admin/AddRole/Dtos/roleDto';
 import { initialUserDto } from '../Admin/AddUser/Dtos/userDto';
 import { loginSlice } from './Requests/LoginSlice';
+import Animated, { BounceIn } from 'react-native-reanimated';
 
 export default function Login() {
   type NavigationProps = DrawerNavigationProp<DrawerParamList, 'Profile', 'Home'>;
@@ -38,17 +39,18 @@ export default function Login() {
   //   }
   // }
 
-  
+
   useFocusEffect(
     React.useCallback(() => {
-      if ( login != loginState && isSwitchOn != loginState.rememberMe && !loginState.isLoggedIn) {
+      if (login != loginState && isSwitchOn != loginState.rememberMe && !loginState.isLoggedIn) {
         setLogin(loginState)
         setIsSwitchOn(loginState.rememberMe ? true : false)
       }
       let flag = true
       var storeData = async () => {
-        const token = await AsyncStorage.getItem(LoginJwtTokenEnum.key)
+
         if (login.rememberMe && !login.isLoggedIn && flag) {
+          const token = await AsyncStorage.getItem(LoginJwtTokenEnum.key)
           dispatch(loginCheckStore()).then(res => {
             const payload = res.payload as ServiceResult<LoginDto>;
             if (payload.responseStatus === ResponseStatus.IsSuccess) {
@@ -190,11 +192,11 @@ export default function Login() {
             setFormHelperText({ ...formHelperText, password: false, username: false });
             // navigation.navigate('Profile');
             navigation.dispatch(
-  CommonActions.reset({
-    index: 0,
-    routes: [{ name: 'Profile' }], // yönlendirmek istediğin ana ekran
-  })
-);
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'Profile' }], // yönlendirmek istediğin ana ekran
+              })
+            );
           }
         }
       })
@@ -206,97 +208,98 @@ export default function Login() {
     // setLogin({ ...login, rememberMe: !isSwitchOn })
     dispatch(loginSlice.actions.rememberMe(isSwitchOn))
   };
-  
+
   const memo = useMemo(() => {
-      return <SafeAreaProvider>
-    <SafeAreaView style={styles.safeAreaView}>
-      <KeyboardAvoidingView
-        style={{ flexGrow: 1, width: '100%', height: '100%' }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20} // İsteğe bağlı
-      >
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
+    return <SafeAreaProvider>
+      <SafeAreaView style={styles.safeAreaView}>
+        <KeyboardAvoidingView
+          style={{ flexGrow: 1, width: '100%', height: '100%' }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20} // İsteğe bağlı
         >
-          <LinearGradient colors={['black', '#3F638C']} style={styles.linearGradient}>
-            {screen.status && (
-              <Card style={styles.card}>
-                <View style={styles.cardTitle}>
-                  <Avatar.Icon size={70} icon="account" />
-                </View>
-                <Card.Content style={styles.CardContent}>
-                  <View style={{ flex: 4, justifyContent: 'center', alignItems: 'center' }}>
-                    <TextInput
-                      style={styles.input}
-                      // ref={inputRef1}
-                      onBlur={() => setFormHelperText({ ...formHelperText, username: login.userDto.userName === "" })}
-                      mode="outlined"
-                      onChangeText={(text) => handleChange(text, "username")}
-                      value={login.userDto.userName}
-                      label="Kullanıcı Adı"
-                      error={formHelperText.username}
-                    />
-                    {formHelperText.username && (
-                      <HelperText type="error" visible={formHelperText.username}>
-                        Lütfen Kullanıcı Adı Girin
-                      </HelperText>
-                    )}
-                    <TextInput
-                      style={styles.input}
-                      // ref={inputRef2}
-                      onBlur={() => setFormHelperText({ ...formHelperText, password: login.userDto.password === "" })}
-                      mode="outlined"
-                      onChangeText={(text) => handleChange(text, "password")}
-                      value={login.userDto.password}
-                      label="Şifre"
-                      error={formHelperText.password}
-                    />
-                    {formHelperText.password && (
-                      <HelperText type="error" visible={formHelperText.password}>
-                        Lütfen Şifre Girin
-                      </HelperText>
-                    )}
+          <Animated.ScrollView
+            entering={BounceIn.delay(300)}
+            contentContainerStyle={{ flexGrow: 1 }}
+            keyboardShouldPersistTaps="handled"
+          >
+            <LinearGradient colors={['black', '#3F638C']} style={styles.linearGradient}>
+              {screen.status && (
+                <Card style={styles.card}>
+                  <View style={styles.cardTitle}>
+                    <Avatar.Icon size={70} icon="account" />
                   </View>
-                  <View style={{ flex: 1, flexWrap: 'wrap' }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Switch
-                        value={isSwitchOn}
-                        onValueChange={onToggleSwitch}
-                        color={isSwitchOn ? 'green' : 'red'}
-                        thumbColor={isSwitchOn ? 'green' : 'red'}
+                  <Card.Content style={styles.CardContent}>
+                    <View style={{ flex: 4, justifyContent: 'center', alignItems: 'center' }}>
+                      <TextInput
+                        style={styles.input}
+                        // ref={inputRef1}
+                        onBlur={() => setFormHelperText({ ...formHelperText, username: login.userDto.userName === "" })}
+                        mode="outlined"
+                        onChangeText={(text) => handleChange(text, "username")}
+                        value={login.userDto.userName}
+                        label="Kullanıcı Adı"
+                        error={formHelperText.username}
                       />
-                      <Chip style={{ backgroundColor: isSwitchOn ? '#77A97C' : '#E46B6B', marginLeft: 10 }}>
-                        {isSwitchOn ? 'Beni Hatırla' : 'Unut'}
-                      </Chip>
+                      {formHelperText.username && (
+                        <HelperText type="error" visible={formHelperText.username}>
+                          Lütfen Kullanıcı Adı Girin
+                        </HelperText>
+                      )}
+                      <TextInput
+                        style={styles.input}
+                        // ref={inputRef2}
+                        onBlur={() => setFormHelperText({ ...formHelperText, password: login.userDto.password === "" })}
+                        mode="outlined"
+                        onChangeText={(text) => handleChange(text, "password")}
+                        value={login.userDto.password}
+                        label="Şifre"
+                        error={formHelperText.password}
+                      />
+                      {formHelperText.password && (
+                        <HelperText type="error" visible={formHelperText.password}>
+                          Lütfen Şifre Girin
+                        </HelperText>
+                      )}
                     </View>
-                    <View>
-                      <Button onPress={() => navigation.navigate('forgotPassword')}>Şifremi Unuttum</Button>
+                    <View style={{ flex: 1, flexWrap: 'wrap' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Switch
+                          value={isSwitchOn}
+                          onValueChange={onToggleSwitch}
+                          color={isSwitchOn ? 'green' : 'red'}
+                          thumbColor={isSwitchOn ? 'green' : 'red'}
+                        />
+                        <Chip style={{ backgroundColor: isSwitchOn ? '#77A97C' : '#E46B6B', marginLeft: 10 }}>
+                          {isSwitchOn ? 'Beni Hatırla' : 'Unut'}
+                        </Chip>
+                      </View>
+                      <View>
+                        <Button onPress={() => navigation.navigate('forgotPassword')}>Şifremi Unuttum</Button>
+                      </View>
                     </View>
+
+                  </Card.Content>
+                  <View style={styles.cardAction}>
+                    <TouchableOpacity>
+                      <Button
+                        loading={loginState.isLoggedIn}
+                        contentStyle={{ width: 200, backgroundColor: '#533285' }}
+                        disabled={login.userDto.userName === "" || login.userDto.password === ""}
+                        mode="contained"
+                        onPress={() => handleSubmit()}
+                      >
+                        Giriş yap
+                      </Button>
+                    </TouchableOpacity>
                   </View>
+                </Card>
+              )}
+            </LinearGradient>
+          </Animated.ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </SafeAreaProvider>
+  }, [screen, loginState, login, isSwitchOn, formHelperText])
 
-                </Card.Content>
-                <View style={styles.cardAction}>
-                  <TouchableOpacity>
-                    <Button
-                      loading={loginState.isLoggedIn}
-                      contentStyle={{ width: 200, backgroundColor: '#533285' }}
-                      disabled={login.userDto.userName === "" || login.userDto.password === ""}
-                      mode="contained"
-                      onPress={() => handleSubmit()}
-                    >
-                      Giriş yap
-                    </Button>
-                  </TouchableOpacity>
-                </View>
-              </Card>
-            )}
-          </LinearGradient>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
-  </SafeAreaProvider>
-  }, [screen,loginState,login,isSwitchOn,formHelperText])
-
-return memo
+  return memo
 }

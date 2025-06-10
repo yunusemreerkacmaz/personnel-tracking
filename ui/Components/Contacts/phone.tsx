@@ -4,6 +4,7 @@ import { IconButton } from "react-native-paper";
 import React from "react";
 import Toast from "react-native-toast-message";
 import { TextStyle } from "react-native";
+import Animated, { FadeInLeft } from "react-native-reanimated";
 
 export default function PhoneScreen({ selectedUserItem }: { selectedUserItem: GetUserDto }) {
     const makePhoneCall = (phoneNumber: string) => {
@@ -15,13 +16,16 @@ export default function PhoneScreen({ selectedUserItem }: { selectedUserItem: Ge
     };
 
     return (
-        <IconButton
-            icon="phone"
-            selected
-            iconColor={"#0E6FD6"}
-            size={24}
-            onPress={() => {
-                makePhoneCall(selectedUserItem.phoneNumber)
-            }} />
+        <Animated.View entering={FadeInLeft.delay(200).duration(1500)}>
+            <IconButton
+                icon="phone"
+                selected
+                iconColor={"#0E6FD6"}
+                size={24}
+                onPress={() => {
+                    makePhoneCall(selectedUserItem.phoneNumber)
+                }} />
+        </Animated.View>
+
     );
 }

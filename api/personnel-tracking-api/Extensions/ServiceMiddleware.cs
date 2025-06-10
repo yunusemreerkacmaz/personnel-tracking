@@ -39,8 +39,8 @@ namespace personnel_tracking_api.Extensions
             services.AddScoped<IEntryExitDal, EfEntryExitDal>();
             services.AddScoped<IEntryExitService, EntryExitService>();
             services.AddScoped<IShiftPlanDal, EfShiftPlanDal>();
+            services.AddScoped<IUserShiftPlanDal, EfUserShiftPlanDal>();
             services.AddScoped<IShiftPlanService, ShiftPlanService>();
-
         }
     }
 }

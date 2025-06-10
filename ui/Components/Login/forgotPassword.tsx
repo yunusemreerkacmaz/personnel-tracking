@@ -67,9 +67,7 @@ export default function ForgotPasswordComponent() {
             }
         }
         else if (visibleState.visible === 'EmailConfirm') {
-
-            
-            let visibleStateDto:ForgottenPasswordDto = {...visibleState,emailConfirmNumber:forgottenPassword.emailConfirmNumber}
+            let visibleStateDto: ForgottenPasswordDto = { ...visibleState, emailConfirmNumber: forgottenPassword.emailConfirmNumber }
             setLoadingStatus(false)
             // visibleState.emailConfirmNumber = forgottenPassword.emailConfirmNumber
             const responseConfirmPassword = await ForgottenPassword(visibleStateDto)
@@ -97,7 +95,7 @@ export default function ForgotPasswordComponent() {
         }
         else if (visibleState.visible === 'NewRegister') {
             if (passwordAgain === forgottenPassword.password) {
-                let visibleStateDto:ForgottenPasswordDto={...visibleState,userName:forgottenPassword.userName,password:forgottenPassword.password,email:visibleState.email,emailConfirmNumber:visibleState.emailConfirmNumber}
+                let visibleStateDto: ForgottenPasswordDto = { ...visibleState, userName: forgottenPassword.userName, password: forgottenPassword.password, email: visibleState.email, emailConfirmNumber: visibleState.emailConfirmNumber }
                 setLoadingStatus(false)
                 const responseNewRegister = await ForgottenPassword(visibleStateDto)
                 if (responseNewRegister?.responseStatus === ResponseStatus.IsSuccess) {
@@ -109,7 +107,7 @@ export default function ForgotPasswordComponent() {
                     setTimeout(() => {
                         // setVisibleEmail('Email')
                         dispatch(forgottenPasswordSlice.actions.setVisiblePage({ ...visibleState, visible: 'Email' }))
-                        navigation.navigate('Login')
+                        navigation.navigate('login')
                     }, 1500);
                 }
                 else if (responseNewRegister?.responseStatus === ResponseStatus.IsError) {
@@ -128,7 +126,15 @@ export default function ForgotPasswordComponent() {
 
     return (
         <View style={{ flex: 1, backgroundColor: '#CDDCEC' }}>
+            <Chip textStyle={{ fontSize: 20,textAlign:'center' }}
+                icon={"arrow-left-bold"}
+                style={{ height:50,justifyContent:'center',alignItems:'center',padding:0 }}
+                onPress={() => {
+                    navigation.navigate('login')
+                }}>Login Sayfasına Dön
+            </Chip>
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#CDDCEC', }}>
+
                 {!loadingStatus &&
                     <Loading />
                 }

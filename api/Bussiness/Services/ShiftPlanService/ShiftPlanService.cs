@@ -1,32 +1,30 @@
 ﻿using Bussiness.ServiceResults;
 using Bussiness.Services.ShiftPlanService.Dtos;
+using Bussiness.Services.UserService.Dtos;
 using DataAccess.Abstract;
-using DataAccess.Concrete;
 using Entity;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Bussiness.Services.ShiftPlanService
 {
     public interface IShiftPlanService
     {
-        Task<ServiceResult<ShiftPlanDto>> CreateShiftPlan(ShiftPlanDto shiftPlanDto);
+        Task<ServiceResult<CreateShiftDto>> CreateShiftPlanService(CreateShiftDto shiftPlanDto);
         Task<ServiceResult<ShiftPlanDto>> UpdateShiftPlan(ShiftPlanDto shiftPlanDto);
-        Task<ServiceResult<ShiftPlanDto>> GetShiftPlansService(int UserId);
+        Task<ServiceResult<ShiftPlanDto>> GetUserShiftPlansService(int UserId);
+        Task<ServiceResult<TableBodyDto>> GetShiftPlansService();
+
+        Task<ServiceResult<UserDto>> GetUsersService(FilterShiftPlanDto filterDto);
 
     }
-    public class ShiftPlanService(IShiftPlanDal shiftPlanDal, IUserDal userDal) : IShiftPlanService
+    public class ShiftPlanService(IShiftPlanDal shiftPlanDal, IUserShiftPlanDal userShiftPlanDal, IUserDal userDal) : IShiftPlanService
     {
         private readonly IShiftPlanDal _shiftPlanDal = shiftPlanDal;
+        private readonly IUserShiftPlanDal _userShiftPlanDal = userShiftPlanDal;
         private readonly IUserDal _userDal = userDal;
 
-        public async Task<ServiceResult<ShiftPlanDto>> GetShiftPlansService(int UserId)
+        public async Task<ServiceResult<ShiftPlanDto>> GetUserShiftPlansService(int UserId)
         {
             var date = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
             DateTime? mondayDate = null;
@@ -62,19 +60,19 @@ namespace Bussiness.Services.ShiftPlanService
             }
 
 
-            IQueryable<ShiftPlan>? shiftPlans = null;
+            IQueryable<UserShiftPlan>? shiftPlans = null;
             var shiftPlanDto = new ShiftPlanDto();
             var startOfWeek = mondayDate;                        //  26.05.2025 - Pazartesi
             var endOfWeek = mondayDate;         //  01.05.2025 - Pazar
             if (UserId == 1)
             {
                 endOfWeek = mondayDate.Value.AddDays(6);         //  01.05.2025 - Pazar
-                shiftPlans = _shiftPlanDal.GetAllQueryAble(x => !x.IsDeleted && x.CreateTime >= startOfWeek && x.CreateTime <= endOfWeek);
+                shiftPlans = _userShiftPlanDal.GetAllQueryAble(x => !x.IsDeleted && x.CreateTime >= startOfWeek && x.CreateTime <= endOfWeek);
             }
             else
             {
                 endOfWeek = mondayDate.Value.AddDays(27);         //  01.05.2025 - Pazar
-                shiftPlans = _shiftPlanDal.GetAllQueryAble(x => !x.IsDeleted && x.CreateTime >= startOfWeek && x.CreateTime <= endOfWeek && x.UserId == UserId);
+                shiftPlans = _userShiftPlanDal.GetAllQueryAble(x => !x.IsDeleted && x.CreateTime >= startOfWeek && x.CreateTime <= endOfWeek && x.UserId == UserId);
             }
             var shiftPlansList = await shiftPlans.ToListAsync();
             TimeSpan? rangeTime = null;
@@ -104,7 +102,6 @@ namespace Bussiness.Services.ShiftPlanService
                         shiftPlanDto.TableBody.Add(new TableBodyDto
                         {
                             Id = shiftPlan.Id,
-                            UserId = shiftPlan.UserId,
                             FirstName = user.FirstName,
                             LastName = user.LastName,
                             IsDeleted = shiftPlan.IsDeleted,
@@ -137,77 +134,94 @@ namespace Bussiness.Services.ShiftPlanService
                 return new ServiceResult<ShiftPlanDto> { Result = shiftPlanDto, ResponseStatus = ResponseStatus.IsError };
             }
         }
-        public async Task<ServiceResult<ShiftPlanDto>> CreateShiftPlan(ShiftPlanDto shiftPlanDto)
+        public async Task<ServiceResult<CreateShiftDto>> CreateShiftPlanService(CreateShiftDto shiftPlanDto)
         {
-            //if (shiftPlanDto != null)
-            //{
-            //    TimeSpan? rangeTime = null;
-            //    string? result = null;
-            //    if (shiftPlanDto.TableBody.Monday != null && (shiftPlanDto.Monday != "Ücretsiz İzin" || shiftPlanDto.Monday != "Ücretli İzin" || shiftPlanDto.Monday != "Yıllık İzin" || shiftPlanDto.Monday != "Raporlu"))
-            //    {
-            //        rangeTime += CalculateTime(shiftPlanDto.Monday);
-            //    }
-            //    if (shiftPlanDto.Tuesday != null && (shiftPlanDto.Tuesday != "Ücretsiz İzin" || shiftPlanDto.Tuesday != "Ücretli İzin" || shiftPlanDto.Tuesday != "Yıllık İzin" || shiftPlanDto.Tuesday != "Raporlu"))
-            //    {
-            //        rangeTime += CalculateTime(shiftPlanDto.Tuesday);
-            //    }
-            //    if (shiftPlanDto.Wednesday != null && (shiftPlanDto.Wednesday != "Ücretsiz İzin" || shiftPlanDto.Wednesday != "Ücretli İzin" || shiftPlanDto.Wednesday != "Yıllık İzin" || shiftPlanDto.Wednesday != "Raporlu"))
-            //    {
-            //        rangeTime += CalculateTime(shiftPlanDto.Wednesday);
-            //    }
-            //    if (shiftPlanDto.Thursday != null && (shiftPlanDto.Thursday != "Ücretsiz İzin" || shiftPlanDto.Thursday != "Ücretli İzin" || shiftPlanDto.Thursday != "Yıllık İzin" || shiftPlanDto.Thursday != "Raporlu"))
-            //    {
-            //        rangeTime += CalculateTime(shiftPlanDto.Thursday);
-            //    }
-            //    if (shiftPlanDto.Friday != null && (shiftPlanDto.Friday != "Ücretsiz İzin" || shiftPlanDto.Friday != "Ücretli İzin" || shiftPlanDto.Friday != "Yıllık İzin" || shiftPlanDto.Friday != "Raporlu"))
-            //    {
-            //        rangeTime += CalculateTime(shiftPlanDto.Friday);
-            //    }
-            //    if (shiftPlanDto.Saturday != null && (shiftPlanDto.Saturday != "Ücretsiz İzin" || shiftPlanDto.Saturday != "Ücretli İzin" || shiftPlanDto.Saturday != "Yıllık İzin" || shiftPlanDto.Saturday != "Raporlu"))
-            //    {
-            //        rangeTime += CalculateTime(shiftPlanDto.Saturday);
-            //    }
-            //    if (shiftPlanDto.Sunday != null && (shiftPlanDto.Sunday != "Ücretsiz İzin" || shiftPlanDto.Sunday != "Ücretli İzin" || shiftPlanDto.Sunday != "Yıllık İzin" || shiftPlanDto.Sunday != "Raporlu"))
-            //    {
-            //        rangeTime += CalculateTime(shiftPlanDto.Sunday);
-            //    }
-            //    if (rangeTime.HasValue)
-            //    {
-            //        result = $"{(int)rangeTime.Value.TotalHours:00}:{rangeTime.Value.Minutes:00}";
-            //    }
-            //    var shiftPlanEntity = new ShiftPlan
-            //    {
-            //        Id = 0,
-            //        UserId = shiftPlanDto.UserId,
-            //        IsDeleted = false,
-            //        CreateTime = DateTime.Now,
-            //        DeleteTime = null,
-            //        UpdateTime = null,
-            //        TotalTime = result,
-            //        Monday = shiftPlanDto.Monday,
-            //        Tuesday = shiftPlanDto.Tuesday,
-            //        Wednesday = shiftPlanDto.Wednesday,
-            //        Thursday = shiftPlanDto.Thursday,
-            //        Friday = shiftPlanDto.Friday,
-            //        Saturday = shiftPlanDto.Saturday,
-            //        Sunday = shiftPlanDto.Sunday,
-            //    };
-            //    var entity = await _shiftPlanDal.AddAsync(shiftPlanEntity);
-            //    if (entity != null)
-            //    {
-            //        return new ServiceResult<ShiftPlanDto> { ResponseStatus = ResponseStatus.IsSuccess, ResponseMessage = "Vardiya Ekleme İşlemi Başarılı" };
-            //    }
-            //    else
-            //    {
-            //        return new ServiceResult<ShiftPlanDto> { ResponseStatus = ResponseStatus.IsError };
-            //    }
-            //}
-            //else
-            //{
-            //    return new ServiceResult<ShiftPlanDto> { ResponseStatus = ResponseStatus.IsError };
-            //}
+            var isHaveSameshift = await _shiftPlanDal.GetAsync(shift => shift.ShiftPlanName.ToLower().Trim().Equals(shiftPlanDto.ShiftPlanName.ToLower().Trim()));
+            if (isHaveSameshift != null)
+            {
+                return new ServiceResult<CreateShiftDto> { ResponseStatus = ResponseStatus.IsWarning, ResponseMessage = "Vardiya sistemde mevcut" };
+            }
 
-            return new ServiceResult<ShiftPlanDto> { ResponseStatus = ResponseStatus.IsError };   // Burayı sil
+            if (!string.IsNullOrEmpty(shiftPlanDto.Permissions.Monday) &&
+                !string.IsNullOrEmpty(shiftPlanDto.Permissions.Tuesday) &&
+                !string.IsNullOrEmpty(shiftPlanDto.Permissions.Wednesday) &&
+                !string.IsNullOrEmpty(shiftPlanDto.Permissions.Thursday) &&
+                !string.IsNullOrEmpty(shiftPlanDto.Permissions.Friday) &&
+                !string.IsNullOrEmpty(shiftPlanDto.Permissions.Saturday) &&
+                !string.IsNullOrEmpty(shiftPlanDto.Permissions.Sunday)
+                )
+            {
+                int totalHours = 0;
+                int totalMinutes = 0;
+                if (shiftPlanDto.Permissions.Monday.Contains("-"))
+                {
+                    totalHours += CalculateTime(shiftPlanDto.Permissions.Monday).Value.Hours;
+                    totalMinutes += CalculateTime(shiftPlanDto.Permissions.Monday).Value.Minutes;
+                }
+                if (shiftPlanDto.Permissions.Tuesday.Contains("-"))
+                {
+                    totalHours += CalculateTime(shiftPlanDto.Permissions.Tuesday).Value.Hours;
+                    totalMinutes += CalculateTime(shiftPlanDto.Permissions.Tuesday).Value.Minutes;
+                }
+                if (shiftPlanDto.Permissions.Wednesday.Contains("-"))
+                {
+                    totalHours += CalculateTime(shiftPlanDto.Permissions.Wednesday).Value.Hours;
+                    totalMinutes += CalculateTime(shiftPlanDto.Permissions.Wednesday).Value.Minutes;
+                }
+                if (shiftPlanDto.Permissions.Thursday.Contains("-"))
+                {
+                    totalHours += CalculateTime(shiftPlanDto.Permissions.Thursday).Value.Hours;
+                    totalMinutes += CalculateTime(shiftPlanDto.Permissions.Thursday).Value.Minutes;
+                }
+                if (shiftPlanDto.Permissions.Friday.Contains("-"))
+                {
+                    totalHours += CalculateTime(shiftPlanDto.Permissions.Friday).Value.Hours;
+                    totalMinutes += CalculateTime(shiftPlanDto.Permissions.Friday).Value.Minutes;
+                }
+                if (shiftPlanDto.Permissions.Saturday.Contains("-"))
+                {
+                    totalHours += CalculateTime(shiftPlanDto.Permissions.Saturday).Value.Hours;
+                    totalMinutes += CalculateTime(shiftPlanDto.Permissions.Saturday).Value.Minutes;
+                }
+                if (shiftPlanDto.Permissions.Sunday.Contains("-"))
+                {
+                    totalHours += CalculateTime(shiftPlanDto.Permissions.Sunday).Value.Hours;
+                    totalMinutes += CalculateTime(shiftPlanDto.Permissions.Sunday).Value.Minutes;
+                }
+                if (totalMinutes > 60)
+                {
+                    totalHours += totalMinutes / 60;
+                    totalMinutes = totalMinutes % 60;
+                }
+                var shiftPlanEntity = new ShiftPlan
+                {
+                    Id = 0,
+                    ShiftPlanName = shiftPlanDto.ShiftPlanName,
+                    Monday = shiftPlanDto.Permissions.Monday,
+                    Tuesday = shiftPlanDto.Permissions.Tuesday,
+                    Wednesday = shiftPlanDto.Permissions.Wednesday,
+                    Thursday = shiftPlanDto.Permissions.Thursday,
+                    Friday = shiftPlanDto.Permissions.Friday,
+                    Saturday = shiftPlanDto.Permissions.Saturday,
+                    Sunday = shiftPlanDto.Permissions.Sunday,
+                    CreateTime = DateTime.Now,
+                    IsDeleted = false,
+                    TotalShiftTime = $"{totalHours}:{(totalMinutes == 0 ? "00" : totalMinutes.ToString("D2"))}"
+                };
+                var entity = await _shiftPlanDal.AddAsync(shiftPlanEntity);
+                if (entity != null)
+                {
+                    return new ServiceResult<CreateShiftDto> { ResponseStatus = ResponseStatus.IsSuccess, ResponseMessage = "Vardiya Ekleme İşlemi Başarılı" };
+                }
+                else
+                {
+                    return new ServiceResult<CreateShiftDto> { ResponseStatus = ResponseStatus.IsError };
+                }
+            }
+            else
+            {
+                return new ServiceResult<CreateShiftDto> { ResponseStatus = ResponseStatus.IsError };
+            }
         }
 
         public Task<ServiceResult<ShiftPlanDto>> UpdateShiftPlan(ShiftPlanDto shiftPlanDto)
@@ -235,6 +249,58 @@ namespace Bussiness.Services.ShiftPlanService
 
         }
 
+        public async Task<ServiceResult<UserDto>> GetUsersService(FilterShiftPlanDto filterDto)
+        {
+            var users = await _userDal.GetAllAsync();
+            var mapToUserDto = users.Select(user => new UserDto
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                Gender = user.Gender,
+                Password = user.Password,
+                CreateTime = user.CreateTime,
+                DeleteTime = user.DeleteTime,
+                PhoneNumber = user.PhoneNumber,
+                UpdateTime = user.UpdateTime,
+                UserName = user.UserName
+            }).ToList();
 
+            if (users.Count > 0)
+            {
+                return new ServiceResult<UserDto> { Results = mapToUserDto, ResponseStatus = ResponseStatus.IsSuccess };
+            }
+            else
+            {
+                return new ServiceResult<UserDto> { ResponseStatus = ResponseStatus.IsError };
+
+            }
+        }
+
+        public async Task<ServiceResult<TableBodyDto>> GetShiftPlansService()
+        {
+            var shiftPlans = await _shiftPlanDal.GetAllAsync();
+            var mapToShiftPlanDto = shiftPlans.Select(shift => new TableBodyDto
+            {
+
+
+                Id = shift.Id,
+                ShiftPlanName = shift.ShiftPlanName,
+                Monday = shift.Monday,
+                Tuesday = shift.Tuesday,
+                Wednesday = shift.Wednesday,
+                Thursday = shift.Thursday,
+                Friday = shift.Friday,
+                Saturday = shift.Saturday,
+                Sunday = shift.Sunday,
+                IsDeleted = shift.IsDeleted,
+                UpdateTime = shift.UpdateTime,
+                CreateTime = shift.CreateTime,
+                DeleteTime = shift.DeleteTime,
+            }).ToList();
+            return new ServiceResult<TableBodyDto> { Results = mapToShiftPlanDto, ResponseStatus = ResponseStatus.IsSuccess };
+
+        }
     }
 }
