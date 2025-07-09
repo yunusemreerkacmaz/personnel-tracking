@@ -13,5 +13,6 @@ namespace Bussiness.Services.EntryExitService.Dtos
         public int RoleId { get; set; }
         public int DeviceId { get; set; }
         public bool IsUserCompleteShift { get; set; }
+
     }
 }

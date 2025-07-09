@@ -12,19 +12,18 @@ namespace Bussiness.Services.ShiftPlanService
     {
         Task<ServiceResult<CreateShiftDto>> CreateShiftPlanService(CreateShiftDto shiftPlanDto);
         Task<ServiceResult<ShiftPlanDto>> UpdateShiftPlan(ShiftPlanDto shiftPlanDto);
-        Task<ServiceResult<ShiftPlanDto>> GetUserShiftPlansService(int UserId);
-        Task<ServiceResult<TableBodyDto>> GetShiftPlansService();
-
+        Task<ServiceResult<ShiftPlanDto>> GetWeekShiftPlansService(int UserId);                     // Kullanıcılar miçin
+        Task<ServiceResult<TableBodyDto>> GetShiftPlansService();                                   // Admin için
         Task<ServiceResult<UserDto>> GetUsersService(FilterShiftPlanDto filterDto);
-
+        Task<ServiceResult<TableBodyDto>> GetUsersShiftPlanService();
     }
     public class ShiftPlanService(IShiftPlanDal shiftPlanDal, IUserShiftPlanDal userShiftPlanDal, IUserDal userDal) : IShiftPlanService
     {
         private readonly IShiftPlanDal _shiftPlanDal = shiftPlanDal;
         private readonly IUserShiftPlanDal _userShiftPlanDal = userShiftPlanDal;
         private readonly IUserDal _userDal = userDal;
-
-        public async Task<ServiceResult<ShiftPlanDto>> GetUserShiftPlansService(int UserId)
+        public async Task<ServiceResult<ShiftPlanDto>> GetWeekShiftPlansService(int UserId)
+        
         {
             var date = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
             DateTime? mondayDate = null;
@@ -63,7 +62,7 @@ namespace Bussiness.Services.ShiftPlanService
             IQueryable<UserShiftPlan>? shiftPlans = null;
             var shiftPlanDto = new ShiftPlanDto();
             var startOfWeek = mondayDate;                        //  26.05.2025 - Pazartesi
-            var endOfWeek = mondayDate;         //  01.05.2025 - Pazar
+            var endOfWeek = mondayDate;                          //  01.05.2025 - Pazar
             if (UserId == 1)
             {
                 endOfWeek = mondayDate.Value.AddDays(6);         //  01.05.2025 - Pazar
@@ -71,7 +70,7 @@ namespace Bussiness.Services.ShiftPlanService
             }
             else
             {
-                endOfWeek = mondayDate.Value.AddDays(27);         //  01.05.2025 - Pazar
+                endOfWeek = mondayDate.Value.AddDays(27);         //  26.05.2025 - Pazartesi - 22.06.2025 - Pazar
                 shiftPlans = _userShiftPlanDal.GetAllQueryAble(x => !x.IsDeleted && x.CreateTime >= startOfWeek && x.CreateTime <= endOfWeek && x.UserId == UserId);
             }
             var shiftPlansList = await shiftPlans.ToListAsync();
@@ -223,12 +222,10 @@ namespace Bussiness.Services.ShiftPlanService
                 return new ServiceResult<CreateShiftDto> { ResponseStatus = ResponseStatus.IsError };
             }
         }
-
         public Task<ServiceResult<ShiftPlanDto>> UpdateShiftPlan(ShiftPlanDto shiftPlanDto)
         {
             throw new NotImplementedException();
         }
-
         private static TimeSpan? CalculateTime(string time)  // "09:00-18:00"
         {
             TimeSpan? result = null;
@@ -248,7 +245,6 @@ namespace Bussiness.Services.ShiftPlanService
             return result;
 
         }
-
         public async Task<ServiceResult<UserDto>> GetUsersService(FilterShiftPlanDto filterDto)
         {
             var users = await _userDal.GetAllAsync();
@@ -277,7 +273,6 @@ namespace Bussiness.Services.ShiftPlanService
 
             }
         }
-
         public async Task<ServiceResult<TableBodyDto>> GetShiftPlansService()
         {
             var shiftPlans = await _shiftPlanDal.GetAllAsync();
@@ -301,6 +296,39 @@ namespace Bussiness.Services.ShiftPlanService
             }).ToList();
             return new ServiceResult<TableBodyDto> { Results = mapToShiftPlanDto, ResponseStatus = ResponseStatus.IsSuccess };
 
+        }
+        public async Task<ServiceResult<TableBodyDto>> GetUsersShiftPlanService()
+        {
+            var users = await _userDal.GetAllAsync();
+            var results = new List<TableBodyDto>();
+            foreach (var user in users)
+            {
+                var shift = await _shiftPlanDal.GetAsync(x => x.Id == user.ShiftPlanId);
+                if (shift != null)
+                {
+                    results.Add(new TableBodyDto
+                    {
+                        Id = shift.Id,
+                        UserId = user.Id,
+                        ShiftPlanName = shift.ShiftPlanName,
+                        Monday = shift.Monday,
+                        Tuesday = shift.Tuesday,
+                        Wednesday = shift.Wednesday,
+                        Thursday = shift.Thursday,
+                        Friday = shift.Friday,
+                        Saturday = shift.Saturday,
+                        Sunday = shift.Sunday,
+                        IsDeleted = shift.IsDeleted,
+                        UpdateTime = shift.UpdateTime,
+                        CreateTime = shift.CreateTime,
+                        DeleteTime = shift.DeleteTime,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        TotalTime = shift.TotalShiftTime,
+                    });
+                }
+            }
+            return new ServiceResult<TableBodyDto> { Results = results, ResponseStatus = ResponseStatus.IsSuccess };
         }
     }
 }

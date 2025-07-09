@@ -9,7 +9,6 @@ namespace personnel_tracking_api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class LoginController(ILoginService loginService) : ControllerBase
     {
         private readonly ILoginService _loginService = loginService;
@@ -22,6 +21,7 @@ namespace personnel_tracking_api.Controllers
             return user;
         }
         [AllowAnonymous]                // Herkes buraya erişebilmeli
+
         [HttpPost("LoginAsync")]
         public async Task<ServiceResult<LoginDto>> LoginAsync([FromBody] LoginDto userDto)
         {

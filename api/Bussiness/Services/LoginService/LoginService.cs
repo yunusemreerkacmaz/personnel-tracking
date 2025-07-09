@@ -67,6 +67,7 @@ namespace Bussiness.Services.LoginService
                     loginDto.UserDto.UpdateTime = getUser.UpdateTime;
                     loginDto.UserDto.UpdateTime = getUser.UpdateTime;
                     loginDto.UserDto.PhoneNumber = getUser.PhoneNumber;
+                    loginDto.RememberMe = loginDto.RememberMe;
                 }
                 if (loginDto.RoleDto != null)
                 {

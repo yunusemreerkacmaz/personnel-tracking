@@ -79,9 +79,6 @@ namespace DataAccess.Migrations
                     b.Property<int>("ApprovingAuthorityId")
                         .HasColumnType("int");
 
-                    b.Property<bool?>("AreaControl")
-                        .HasColumnType("tinyint(1)");
-
                     b.Property<int?>("DeviceId")
                         .HasColumnType("int");
 
@@ -89,16 +86,28 @@ namespace DataAccess.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("EntranceActionType")
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(100)");
 
                     b.Property<bool>("Entreance")
                         .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("EntryAddress")
+                        .HasColumnType("varchar(300)");
 
                     b.Property<bool>("Exit")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("ExitActionType")
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("ExitAddress")
+                        .HasColumnType("varchar(300)");
+
+                    b.Property<bool?>("IsInEntryArea")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool?>("IsInExitArea")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<double?>("Latitude")
                         .HasColumnType("double");
@@ -248,9 +257,8 @@ namespace DataAccess.Migrations
                     b.Property<string>("Friday")
                         .HasColumnType("varchar(30)");
 
-                    b.Property<string>("IsDeleted")
-                        .IsRequired()
-                        .HasColumnType("varchar(30)");
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Monday")
                         .HasColumnType("varchar(30)");
@@ -259,7 +267,7 @@ namespace DataAccess.Migrations
                         .HasColumnType("varchar(30)");
 
                     b.Property<string>("ShiftPlanName")
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(500)");
 
                     b.Property<string>("Sunday")
                         .HasColumnType("varchar(30)");
@@ -268,7 +276,7 @@ namespace DataAccess.Migrations
                         .HasColumnType("varchar(30)");
 
                     b.Property<string>("TotalShiftTime")
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(30)");
 
                     b.Property<string>("Tuesday")
                         .HasColumnType("varchar(30)");
@@ -389,6 +397,9 @@ namespace DataAccess.Migrations
                     b.Property<string>("RoleName")
                         .IsRequired()
                         .HasColumnType("varchar(100)");
+
+                    b.Property<int>("ShiftPlanId")
+                        .HasColumnType("int");
 
                     b.Property<TimeOnly?>("StartTime")
                         .HasColumnType("time(6)");

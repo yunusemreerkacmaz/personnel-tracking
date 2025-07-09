@@ -22,14 +22,19 @@ namespace Bussiness.Services.EntryExitService
             var locationStatus = entryExitDto?.LocationDto != null &&
                entryExitDto.LocationDto.Longitude != null &&
                entryExitDto.LocationDto.Latitude != null &&
-               entryExitDto.LocationDto.AreaControl != null;
+               entryExitDto.LocationDto.IsInArea != null;
 
             var user = await _userDal.GetAsync(user => entryExitDto != null && user.Id == entryExitDto.UserId && user.IsActive && !user.IsDeleted);  // barkod bilgileri varsa kullanıcı bilgilerini al
             var device = await _deviceDal.GetAsync(device => device.UserId == user.Id && !device.IsDeleted);
+            if (device == null)
+            {
+                entryExitDto.BarcodeReadEnum = EntryExitEnum.Default;
+                entryExitDto.BiometricEnum = EntryExitEnum.Default;
+            }
 
             if (entryExitDto != null && locationStatus && user != null && device != null)
             {
-                var entryExitRecords = await _entryExitDal.GetAllAsync(x => x.UserId == entryExitDto.UserId && (x.StartDate.HasValue && x.StartDate.Value.Date == DateTime.Now.Date) || (x.EndDate.HasValue && x.EndDate.Value.Date == DateTime.Now.Date));
+                var entryExitRecords = await _entryExitDal.GetAllAsync(x => x.UserId == entryExitDto.UserId && ((x.StartDate.HasValue && x.StartDate.Value.Date == DateTime.Now.Date) || (x.EndDate.HasValue && x.EndDate.Value.Date == DateTime.Now.Date)));
                 var lastRecord = entryExitRecords.LastOrDefault();
                 entryExitDto.DeviceId = device.Id;
                 entryExitDto.UserId = user.Id;
@@ -127,14 +132,14 @@ namespace Bussiness.Services.EntryExitService
 
                 if (distance.HasValue && distance != 0 && store.Radius != 0 && distance <= store.Radius)
                 {
-                    entryExitDto.LocationDto.AreaControl = true;      // barkodu okutan alan içinde 
+                    entryExitDto.LocationDto.IsInArea = true;      // barkodu okutan alan içinde 
                 }
                 else
                 {
-                    entryExitDto.LocationDto.AreaControl = false;       // barkodu okutan alan dışında 
+                    entryExitDto.LocationDto.IsInArea = false;       // barkodu okutan alan dışında 
                 }
 
-                if (lastRecord != null && lastRecord.Entreance && lastRecord.Exit==false && entryExitDto.BarcodeReadEnum == EntryExitEnum.Entreance)
+                if (lastRecord != null && lastRecord.Entreance && lastRecord.Exit == false && entryExitDto.BarcodeReadEnum == EntryExitEnum.Entreance)
                 {
                     return new ServiceResult<EntryExitDto> { ResponseStatus = ResponseStatus.IsWarning, ResponseMessage = "Giriş yapmıştınız" };
                 }
@@ -151,14 +156,16 @@ namespace Bussiness.Services.EntryExitService
                         entity.Entreance = true;
                         entity.StartDate = DateTime.Now;
                         entity.EntranceActionType = "Barkod";
-                        entity.AreaControl = entryExitDto.LocationDto.AreaControl;
+                        entity.IsInEntryArea = entryExitDto.LocationDto.IsInArea;
+                        entity.EntryAddress = entryExitDto.LocationDto.Address;
                     }
                     if (entryExitDto.BiometricEnum == EntryExitEnum.Entreance)
                     {
                         entity.Entreance = true;
                         entity.StartDate = DateTime.Now;
                         entity.EntranceActionType = "Biyometrik";
-                        entity.AreaControl = entryExitDto.LocationDto.AreaControl;
+                        entity.IsInEntryArea = entryExitDto.LocationDto.IsInArea;
+                        entity.EntryAddress = entryExitDto.LocationDto.Address;
                     }
                     var entryBarcode = await _entryExitDal.AddAsync(entity);
                     if (entryBarcode != null)
@@ -178,15 +185,17 @@ namespace Bussiness.Services.EntryExitService
                         lastRecord.Exit = true;
                         lastRecord.EndDate = DateTime.Now;
                         lastRecord.ExitActionType = "Barkod";
-                        lastRecord.AreaControl = entryExitDto.LocationDto.AreaControl;
+                        lastRecord.IsInExitArea = entryExitDto.LocationDto.IsInArea;
+                        lastRecord.ExitAddress = entryExitDto.LocationDto.Address;
                     }
                     if (entryExitDto.BiometricEnum == EntryExitEnum.Exit)
                     {
                         lastRecord.Exit = true;
                         lastRecord.EndDate = DateTime.Now;
                         lastRecord.ExitActionType = "Biyometrik";
-                        lastRecord.AreaControl = entryExitDto.LocationDto.AreaControl;
+                        lastRecord.IsInExitArea = entryExitDto.LocationDto.IsInArea;
                         entryExitDto.BarcodeReadEnum = null;
+                        lastRecord.ExitAddress = entryExitDto.LocationDto.Address;
                     }
                     var exitBarcode = await _entryExitDal.UpdateAsync(lastRecord);
                     if (exitBarcode)

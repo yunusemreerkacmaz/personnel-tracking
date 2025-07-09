@@ -7,6 +7,7 @@ namespace Entity
     public class ShiftPlan : CrudTime, IEntity
     {
         public int Id { get; set; }
+        [Column(TypeName = "varchar(500)")]
         public string? ShiftPlanName { get; set; }
         [Column(TypeName = "varchar(30)")]
         public string? Monday { get; set; }
@@ -22,8 +23,8 @@ namespace Entity
         public string? Saturday { get; set; }
         [Column(TypeName = "varchar(30)")]
         public string? Sunday { get; set; }
-        [Column(TypeName = "varchar(30)")]
         public bool IsDeleted { get; set; }
+        [Column(TypeName = "varchar(30)")]
         public string? TotalShiftTime { get; set; } // haftada saat ve dakika toplamı 43:30 ---> 43 saat 30 dakika
     }
 }

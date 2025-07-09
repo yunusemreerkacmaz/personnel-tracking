@@ -1,3 +1,4 @@
+using Microsoft.Extensions.FileProviders;
 using personnel_tracking_api.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,6 +50,13 @@ app.UseRouting();                                       // Yönedirme için þart
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseStaticFiles(); // wwwroot içinden statik dosyalarý sunar
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "UploadFiles")),
+    RequestPath = "/UploadFiles"
+});
 app.MapControllers();
 app.UseWebSockets();
 app.UseMiddleware<WebSocketMiddleware>();               // webSocket(Bildirimler) iþlemi

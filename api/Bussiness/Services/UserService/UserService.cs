@@ -18,7 +18,7 @@ namespace Bussiness.Services.UserService
         Task<ServiceResult<AddUserDto>> UpdateUser(AddUserDto updateUserDto);
         Task<ServiceResult<UserEntryExitLoginDto>> GetEntryExitUserLoginService(); // Admin onaylı giriş yapma
         Task<ServiceResult<UserEntryExitLoginDto>> GetEntryExitUserLogoutService(); // Admin onaylı çıkış yapma
-        Task<ServiceResult<UserEntryExitLoginDto>> UpdateEntryExitUserService(UserEntryExitLoginDto updateUserDto);  
+        Task<ServiceResult<UserEntryExitLoginDto>> UpdateEntryExitUserService(UserEntryExitLoginDto updateUserDto);
     }
     public class UserService(IUserDal userDal, IEntryExitDal entryExitDal, IStoreDal storeDal, IDeviceDal deviceDal, IHttpContextAccessor httpContextAccessor) : IUserService
     {
@@ -136,7 +136,7 @@ namespace Bussiness.Services.UserService
             loginDto.UserDto.Email == user.Email &&
             loginDto.RoleDto.RoleName.ToLower().Trim() == user.RoleName.ToLower().Trim());
 
-            var exitEntryUserIds=_entryExitDal.GetAllQueryAble().Select(record=>record.UserId);
+            var exitEntryUserIds = _entryExitDal.GetAllQueryAble().Select(record => record.UserId);
             var users = _userDal.GetAllQueryAble(x => !x.IsDeleted).Where(x => getUser.RoleId == 1 || (x.StoreId == getUser.StoreId && x.RoleId != 1));  //Admin herkesi görsün ama mağaza yöneticileri altında çalışanları görsün ve admin o mağazaya dahilse gözükmesin
             var stores = _storeDal.GetAllQueryAble(x => !x.IsDeleted);
 
@@ -332,7 +332,7 @@ namespace Bussiness.Services.UserService
                         var willAddEntryExitEntity = new EntryExitRecord
                         {
                             Id = 0,
-                            AreaControl = true,
+                            IsInEntryArea = true,
                             DeviceId = device.Id,
                             StartDate = DateTime.Now,
                             EndDate = null,
@@ -343,7 +343,7 @@ namespace Bussiness.Services.UserService
                             RoleId = user.RoleId,
                             UserId = user.Id,
                             ApprovingAuthorityId = 1, // buradaki metoda sadece admin istek atabildiğinden dolayı direk 1 eklendi
-                            ExitActionType="Admin Onay",
+                            ExitActionType = "Admin Onay",
                         };
                         var addEntryExit = await _entryExitDal.AddAsync(willAddEntryExitEntity);
                         if (addEntryExit != null)
@@ -363,17 +363,9 @@ namespace Bussiness.Services.UserService
                             var lastEntryExitItem = entryExit.LastOrDefault();
                             if (lastEntryExitItem != null)
                             {
-                                lastEntryExitItem.Id = lastEntryExitItem.Id;
-                                lastEntryExitItem.AreaControl = lastEntryExitItem.AreaControl;
-                                lastEntryExitItem.DeviceId = lastEntryExitItem.DeviceId;
-                                lastEntryExitItem.StartDate = lastEntryExitItem.StartDate;
                                 lastEntryExitItem.EndDate = DateTime.Now;
-                                lastEntryExitItem.Entreance = lastEntryExitItem.Entreance;
+                                lastEntryExitItem.IsInExitArea = true;
                                 lastEntryExitItem.Exit = true;
-                                lastEntryExitItem.Latitude = lastEntryExitItem.Latitude;
-                                lastEntryExitItem.Longtitude = lastEntryExitItem.Longtitude;
-                                lastEntryExitItem.RoleId = lastEntryExitItem.RoleId;
-                                lastEntryExitItem.UserId = lastEntryExitItem.UserId;
                                 lastEntryExitItem.EntranceActionType = "Admin Onay";
                                 lastEntryExitItem.ApprovingAuthorityId = 1;       // buradaki metoda sadece admin istek atabildiğinden dolayı direkt 1 eklendi.
                                 var updateLastEntryExitItem = await _entryExitDal.UpdateAsync(lastEntryExitItem);

@@ -11,28 +11,34 @@ namespace personnel_tracking_api.Controllers
     public class ShiftPlanController(IShiftPlanService shiftPlanService) : ControllerBase
     {
         private readonly IShiftPlanService _shiftPlanService = shiftPlanService;
-        [HttpGet("GetUserShiftPlans/{userId}")]
-        public async Task<ServiceResult<ShiftPlanDto>> GetUserShiftPlans(int userId)
+        [HttpGet("GetWeekShiftPlans/{userId}")]
+        public async Task<ServiceResult<ShiftPlanDto>> GetWeekShiftPlans(int userId)        // Kullanıcının bulunduğu haftanın verileri
         {
-            var result = await _shiftPlanService.GetUserShiftPlansService(userId);
+            var result = await _shiftPlanService.GetWeekShiftPlansService(userId);
             return result;
         }
         [HttpGet("GetShiftPlans")]
-        public async Task<ServiceResult<TableBodyDto>> GetShiftPlans()
+        public async Task<ServiceResult<TableBodyDto>> GetShiftPlans()                      // Tüm vardiyalar
         {
             var result = await _shiftPlanService.GetShiftPlansService();
             return result;
         }
-        [HttpPost("GetUsers")]
-        public async Task<ServiceResult<UserDto>> GetUsers([FromBody] FilterShiftPlanDto filterDto)
+        [HttpGet("GetUsersShiftPlan")]
+        public async Task<ServiceResult<TableBodyDto>> GetUsersShiftPlan()                  // Kullanıcıların vardiyalarının listesi(Tüm kullanıcılar listelendi)
         {
-            var result = await _shiftPlanService.GetUsersService(filterDto);
+            var result = await _shiftPlanService.GetUsersShiftPlanService();
             return result;
         }
         [HttpPost("CreateShiftPlan")]
-        public async Task<ServiceResult<CreateShiftDto>> CreateShiftPlan([FromBody] CreateShiftDto createShiftDto)
+        public async Task<ServiceResult<CreateShiftDto>> CreateShiftPlan([FromBody] CreateShiftDto createShiftDto)  // Vardiya oluşturuldu
         {
             var result = await _shiftPlanService.CreateShiftPlanService(createShiftDto);
+            return result;
+        }
+        [HttpPost("GetUsers")]
+        public async Task<ServiceResult<UserDto>> GetUsers([FromBody] FilterShiftPlanDto filterDto)     // Kullanıcılar
+        {
+            var result = await _shiftPlanService.GetUsersService(filterDto);
             return result;
         }
     }

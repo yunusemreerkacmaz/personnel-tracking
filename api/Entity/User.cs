@@ -29,5 +29,6 @@ namespace Entity
         public TimeOnly? EndTime { get; set; }  // personel vardiya bitiş zamanı
         [Column(TypeName = "varchar(15)")]
         public string PhoneNumber { get; set; }
+        public int ShiftPlanId { get; set; }
     }
 }
